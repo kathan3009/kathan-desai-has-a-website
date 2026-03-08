@@ -22,21 +22,31 @@ export default async function HomePage() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
       <section className="mb-16 sm:mb-24">
         <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-foreground mb-4 tracking-tight">
-          Kathan Desai
+          Hi, I'm Kathan.
         </h1>
-        <p className="text-xl text-muted mb-2">
-          Founder of{" "}
+        <p className="text-muted max-w-2xl leading-relaxed mb-4">
+          I'm an entrepreneur and builder focused on AI for security. I dropped out at 20 to co-found{" "}
           <a
             href="https://bugbase.in"
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:underline"
           >
-            bugbase
+            BugBase
           </a>
+          , a bug bounty platform, and I'm now building{" "}
+          <a
+            href="https://copilot.bugbase.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent hover:underline"
+          >
+            Pentest Copilot
+          </a>{" "}
+          — an AI agent for autonomous pentesting. Outside of work, I write, build side projects, and shoot photography.
         </p>
         <p className="text-muted max-w-2xl leading-relaxed">
-          Kathan Desai is the Founder of bugbase, a platform that connects security researchers with companies for bug bounty programs. Building tools for the security community.
+          Currently based in San Francisco and New Delhi.
         </p>
       </section>
 
