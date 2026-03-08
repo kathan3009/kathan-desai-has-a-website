@@ -1,7 +1,6 @@
 import Link from "next/link";
 import dbConnect from "@/lib/db";
 import { ProjectCard } from "@/components/ProjectCard";
-import { MediaBlock } from "@/components/MediaBlock";
 import Work from "@/models/Work";
 import Project from "@/models/Project";
 import Blog from "@/models/Blog";
@@ -100,9 +99,6 @@ export default async function HomePage() {
                 className="block group"
               >
                 <div className="flex flex-col sm:flex-row gap-4">
-                  {post.featuredImage && (
-                    <MediaBlock image={post.featuredImage} alt="" variant="blog-thumbnail" className="group-hover:opacity-80 transition-opacity" />
-                  )}
                   <div className="min-w-0 flex-1">
                     <h3 className="text-foreground font-medium group-hover:text-accent transition-colors line-clamp-1">
                       {post.title}
