@@ -62,6 +62,7 @@ export default function PhotographyGallery({ photos }: { photos: PhotoItem[] }) 
 
 function CarouselView({ photos }: { photos: PhotoItem[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const secondCardRef = useRef<HTMLElement | null>(null);
   const [scrollState, setScrollState] = useState({ scrollLeft: 0, containerWidth: 0 });
 
   useEffect(() => {
@@ -80,6 +81,15 @@ function CarouselView({ photos }: { photos: PhotoItem[] }) {
       window.removeEventListener("resize", update);
     };
   }, []);
+
+  // Default to second image so there's content on both left and right
+  useEffect(() => {
+    const card = secondCardRef.current;
+    const container = scrollRef.current;
+    if (card && container && photos.length > 1) {
+      card.scrollIntoView({ behavior: "auto", block: "nearest", inline: "center" });
+    }
+  }, [photos.length]);
 
   return (
     <div className="relative -mx-6">
@@ -102,6 +112,7 @@ function CarouselView({ photos }: { photos: PhotoItem[] }) {
               index={index}
               scrollState={scrollState}
               scrollRef={scrollRef}
+              cardRef={index === 1 ? secondCardRef : undefined}
             />
           ))}
         </div>
@@ -114,13 +125,16 @@ function CarouselCard({
   photo,
   scrollState,
   scrollRef,
+  cardRef: externalCardRef,
 }: {
   photo: PhotoItem;
   index: number;
   scrollState: { scrollLeft: number; containerWidth: number };
   scrollRef: React.RefObject<HTMLDivElement | null>;
+  cardRef?: React.RefObject<HTMLElement | null>;
 }) {
-  const cardRef = useRef<HTMLElement>(null);
+  const internalCardRef = useRef<HTMLElement>(null);
+  const cardRef = externalCardRef ?? internalCardRef;
   const [distanceFromCenter, setDistanceFromCenter] = useState(9999);
 
   useEffect(() => {
@@ -163,7 +177,7 @@ function CarouselCard({
         zIndex,
       }}
     >
-      <div className="relative overflow-hidden bg-card aspect-[4/5] max-h-[420px] rounded-sm">
+      <div className="relative flex aspect-[4/5] w-full min-h-0 items-center justify-center overflow-hidden rounded-sm">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photo.image}
@@ -199,15 +213,14 @@ function MasonryGrid({ photos }: { photos: PhotoItem[] }) {
 
 function MasonryCard({ photo }: { photo: PhotoItem }) {
   return (
-    <figure className="group">
-      <div className="relative overflow-hidden bg-card rounded-sm aspect-[3/4] max-h-[360px] w-full">
+    <figure>
+      <div className="relative flex aspect-[4/5] min-h-0 items-center justify-center overflow-hidden rounded-sm">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photo.image}
           alt={photo.caption || "Photograph"}
-          className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+          className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       {photo.caption && (
         <figcaption className="mt-3">
