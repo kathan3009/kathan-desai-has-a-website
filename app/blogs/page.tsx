@@ -1,6 +1,7 @@
 import Link from "next/link";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
+import { extractYoutubeId, getYoutubeThumbnailUrl } from "@/lib/youtube";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
 import { MediaBlock } from "@/components/MediaBlock";
 
@@ -16,7 +17,12 @@ type Props = { searchParams: Promise<{ category?: string }> };
 export default async function BlogPage({ searchParams }: Props) {
   const { category } = await searchParams;
   const conn = await dbConnect();
-  const rawPosts = conn ? await Blog.find().sort({ publishedAt: -1 }).lean() : [];
+  const rawPosts = conn
+    ? await Blog.find()
+        .select("_id title slug excerpt content featuredImage videoEmbed publishedAt category isTopStory readCount")
+        .sort({ publishedAt: -1 })
+        .lean()
+    : [];
   const allPosts = rawPosts.map((p) => ({
     ...p,
     _id: p._id?.toString?.() ?? p._id,
@@ -119,22 +125,24 @@ type BlogPost = {
   videoEmbed?: string;
 };
 
-function extractYoutubeId(text: string): string | null {
-  if (!text?.trim()) return null;
-  const ytEmbed = text.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
-  const ytWatch = text.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
-  const ytShort = text.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
-  return ytEmbed?.[1] ?? ytWatch?.[1] ?? ytShort?.[1] ?? null;
-}
 
-function getYoutubeThumbnail(videoEmbed?: string, content?: string): string | null {
-  const vidId = extractYoutubeId(videoEmbed ?? "") ?? extractYoutubeId(content ?? "");
-  return vidId ? `https://img.youtube.com/vi/${vidId}/hqdefault.jpg` : null;
+const MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** Deterministic date format to avoid server/client hydration mismatch */
+function formatDate(date: Date | string, style: "long" | "short" | "shortNoYear" = "long"): string {
+  const d = new Date(date);
+  const month = d.getUTCMonth();
+  const day = d.getUTCDate();
+  const year = d.getUTCFullYear();
+  const monthStr = style === "long" ? MONTHS_LONG[month] : MONTHS_SHORT[month];
+  if (style === "shortNoYear") return `${monthStr} ${day}`;
+  return `${monthStr} ${day}, ${year}`;
 }
 
 function Thumbnail({ src, videoEmbed, content, size = "square" }: { src?: string; videoEmbed?: string; content?: string; size?: "square" | "wide" }) {
   const dims = size === "square" ? "w-16 h-16" : "w-full aspect-video";
-  const thumbnailSrc = src ?? getYoutubeThumbnail(videoEmbed, content);
+  const thumbnailSrc = src ?? getYoutubeThumbnailUrl(videoEmbed, content);
   const hasVideo = !!(videoEmbed?.trim() || extractYoutubeId(content ?? ""));
   if (thumbnailSrc) {
     return (
@@ -161,7 +169,7 @@ function Thumbnail({ src, videoEmbed, content, size = "square" }: { src?: string
 }
 
 function MostReadItem({ post }: { post: BlogPost }) {
-  const thumbSrc = post.featuredImage || getYoutubeThumbnail(post.videoEmbed, post.content);
+  const thumbSrc = post.featuredImage || getYoutubeThumbnailUrl(post.videoEmbed, post.content);
   return (
     <Link href={`/blogs/${post.slug}`} className="flex gap-3 group">
       <div className="shrink-0 w-16 h-16 rounded overflow-hidden bg-card relative">
@@ -200,29 +208,31 @@ function MostReadItem({ post }: { post: BlogPost }) {
 function FeaturedArticle({ post }: { post: BlogPost }) {
   return (
     <Link href={`/blogs/${post.slug}`} className="block group">
-      <article>
-        <div className="overflow-hidden rounded-lg bg-card mb-4 w-full aspect-video">
-          {(post.featuredImage || post.videoEmbed) ? (
-            <MediaBlock image={post.featuredImage} videoEmbed={post.videoEmbed} alt={post.title} variant="project-card" className="w-full h-full" />
-          ) : (
-            <div className="w-full h-full rounded bg-gradient-to-br from-stone-200 to-stone-100 flex items-center justify-center">
-              <span className="text-muted/60 text-xl font-mono">/</span>
-            </div>
+      <div>
+        <article>
+          <div className="overflow-hidden rounded-lg bg-card mb-4 w-full aspect-video">
+            {(post.featuredImage || post.videoEmbed || extractYoutubeId(post.content ?? "")) ? (
+              <MediaBlock image={post.featuredImage} videoEmbed={post.videoEmbed} content={post.content} alt={post.title} variant="blog-banner" className="w-full h-full" prioritizeVideo />
+            ) : (
+              <div className="w-full h-full rounded bg-gradient-to-br from-stone-200 to-stone-100 flex items-center justify-center">
+                <span className="text-muted/60 text-xl font-mono">/</span>
+              </div>
+            )}
+          </div>
+          {post.category && (
+            <span className="text-xs text-accent font-semibold uppercase tracking-wider">{post.category}</span>
           )}
-        </div>
-        {post.category && (
-          <span className="text-xs text-accent font-semibold uppercase tracking-wider">{post.category}</span>
-        )}
-        <h2 className="text-xl md:text-2xl font-bold text-foreground group-hover:text-accent transition-colors mt-2 leading-tight">
-          {post.title}
-        </h2>
-        {post.excerpt && (
-          <p className="text-muted text-sm md:text-base mt-3 line-clamp-3 leading-relaxed">{post.excerpt}</p>
-        )}
-        <p className="text-muted text-sm mt-4">
-          {new Date(post.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-        </p>
-      </article>
+          <h2 className="text-xl md:text-2xl font-bold text-foreground group-hover:text-accent transition-colors mt-2 leading-tight">
+            {post.title}
+          </h2>
+          {post.excerpt && (
+            <p className="text-muted text-sm md:text-base mt-3 line-clamp-3 leading-relaxed">{post.excerpt}</p>
+          )}
+          <p className="text-muted text-sm mt-4" suppressHydrationWarning>
+            {formatDate(post.publishedAt, "long")}
+          </p>
+        </article>
+      </div>
     </Link>
   );
 }
@@ -246,11 +256,12 @@ function SubArticle({ post }: { post: BlogPost }) {
 function LatestItem({ post, isFirst }: { post: BlogPost; isFirst?: boolean }) {
   return (
     <Link href={`/blogs/${post.slug}`} className="block group">
+      <div>
       {isFirst ? (
         <article>
           <div className="overflow-hidden rounded-lg bg-card mb-3 w-full aspect-video">
-            {(post.featuredImage || post.videoEmbed) ? (
-              <MediaBlock image={post.featuredImage} videoEmbed={post.videoEmbed} alt={post.title} variant="project-card" className="w-full h-full" />
+            {(post.featuredImage || post.videoEmbed || extractYoutubeId(post.content ?? "")) ? (
+              <MediaBlock image={post.featuredImage} videoEmbed={post.videoEmbed} content={post.content} alt={post.title} variant="blog-banner" className="w-full h-full" />
             ) : (
               <div className="w-full h-full rounded bg-gradient-to-br from-stone-200 to-stone-100 flex items-center justify-center">
                 <span className="text-muted/60 text-xl font-mono">/</span>
@@ -266,8 +277,8 @@ function LatestItem({ post, isFirst }: { post: BlogPost; isFirst?: boolean }) {
           {post.excerpt && (
             <p className="text-muted text-sm mt-2 line-clamp-2">{post.excerpt}</p>
           )}
-          <p className="text-muted text-xs mt-2">
-            {new Date(post.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          <p className="text-muted text-xs mt-2" suppressHydrationWarning>
+            {formatDate(post.publishedAt, "short")}
           </p>
         </article>
       ) : (
@@ -277,12 +288,13 @@ function LatestItem({ post, isFirst }: { post: BlogPost; isFirst?: boolean }) {
             <h3 className="text-foreground text-sm font-medium group-hover:text-accent transition-colors line-clamp-2">
               {post.title}
             </h3>
-            <p className="text-muted text-xs mt-1">
-              {new Date(post.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            <p className="text-muted text-xs mt-1" suppressHydrationWarning>
+              {formatDate(post.publishedAt, "shortNoYear")}
             </p>
           </div>
         </article>
       )}
+      </div>
     </Link>
   );
 }

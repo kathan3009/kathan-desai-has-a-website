@@ -86,7 +86,10 @@ export default function AdminBlogPage() {
         <input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: form.slug || slugify(e.target.value) })} className="w-full px-3 py-2 bg-card border border-border rounded text-foreground" required />
         <input placeholder="Slug (auto-generated if empty)" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="w-full px-3 py-2 bg-card border border-border rounded text-foreground" />
         <input placeholder="Featured image URL" value={form.featuredImage} onChange={(e) => setForm({ ...form, featuredImage: e.target.value })} className="w-full px-3 py-2 bg-card border border-border rounded text-foreground" />
-        <textarea placeholder="Video embed (YouTube URL or iframe HTML)" value={form.videoEmbed} onChange={(e) => setForm({ ...form, videoEmbed: e.target.value })} className="w-full px-3 py-2 bg-card border border-border rounded text-foreground" rows={2} />
+        <div>
+          <textarea placeholder="Video embed (YouTube URL or iframe HTML)" value={form.videoEmbed} onChange={(e) => setForm({ ...form, videoEmbed: e.target.value })} className="w-full px-3 py-2 bg-card border border-border rounded text-foreground" rows={2} />
+          <p className="text-muted text-xs mt-1">Paste the full YouTube URL here (e.g. https://youtube.com/watch?v=xxx) so the video thumbnail shows on the blog listing.</p>
+        </div>
         <input placeholder="Category (e.g. Security, Development)" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 bg-card border border-border rounded text-foreground" />
         <textarea placeholder="Excerpt" value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} className="w-full px-3 py-2 bg-card border border-border rounded text-foreground" rows={2} />
         <textarea placeholder="Content (Markdown supported)" value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} className="w-full px-3 py-2 bg-card border border-border rounded text-foreground" rows={8} required />

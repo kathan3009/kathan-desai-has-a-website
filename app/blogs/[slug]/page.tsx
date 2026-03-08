@@ -50,9 +50,16 @@ export default async function BlogPostPage({ params }: Props) {
       />
       <article className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">{post.title}</h1>
-        {(post.featuredImage || post.videoEmbed) && (
+        {(post.featuredImage || post.videoEmbed || (post.content && (post.content.includes("youtube") || post.content.includes("youtu.be")))) && (
           <div className="mb-6">
-            <MediaBlock image={post.featuredImage} videoEmbed={post.videoEmbed} alt={post.title} variant="blog-hero" />
+            <MediaBlock
+              image={post.featuredImage}
+              videoEmbed={post.videoEmbed}
+              content={post.content}
+              alt={post.title}
+              variant="blog-hero"
+              prioritizeVideo
+            />
           </div>
         )}
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 mb-8">
