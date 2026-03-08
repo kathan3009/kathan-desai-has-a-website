@@ -99,7 +99,11 @@ function simpleMarkdown(text: string): string {
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.*?)\*/g, "<em>$1</em>")
     .replace(/`(.*?)`/g, "<code class='bg-card border border-border px-1 rounded text-accent'>$1</code>")
-    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-accent hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\[(.*?)\]\((.*?)\)/g, (_, text, href) => {
+      const trimmed = (href || "").trim();
+      if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) return `[${text}](${href})`;
+      return `<a href="${trimmed.replace(/"/g, "&quot;")}" class="text-accent hover:underline" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    })
     .split(/\n\n+/)
     .map((p) => {
       const t = p.trim();

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth";
 import dbConnect from "@/lib/db";
+import { sanitizeForMongo } from "@/lib/sanitize";
 import About from "@/models/About";
 
 export async function GET() {
@@ -16,6 +17,6 @@ export async function POST(request: NextRequest) {
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await dbConnect();
   const body = await request.json();
-  const item = await About.create(body);
+  const item = await About.create(sanitizeForMongo(body));
   return NextResponse.json(item);
 }

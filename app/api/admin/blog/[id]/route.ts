@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth";
 import dbConnect from "@/lib/db";
+import { sanitizeForMongo } from "@/lib/sanitize";
 import Blog from "@/models/Blog";
 
 export async function PUT(
@@ -11,11 +12,11 @@ export async function PUT(
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await dbConnect();
   const { id } = await params;
-  const body = await _request.json();
+  const body = sanitizeForMongo(await _request.json());
   if (body.content || body.title) {
     body.dateModified = new Date();
   }
-  const item = await Blog.findByIdAndUpdate(id, body, { new: true });
+  const item = await Blog.findByIdAndUpdate(id, body, { new: true, runValidators: true });
   if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(item);
 }

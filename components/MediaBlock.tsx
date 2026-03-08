@@ -33,9 +33,7 @@ type MediaBlockProps = {
 function normalizeVideoEmbed(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "";
-  // Already iframe HTML
-  if (trimmed.startsWith("<iframe")) return trimmed;
-  // Raw YouTube URLs -> iframe
+  // Raw YouTube URLs -> safe iframe
   const ytEmbed = trimmed.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
   const ytWatch = trimmed.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
   const ytShort = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
@@ -43,7 +41,15 @@ function normalizeVideoEmbed(raw: string): string {
   if (vidId) {
     return `<iframe src="https://www.youtube.com/embed/${vidId}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
   }
-  return trimmed;
+  // Only allow existing iframes that point to YouTube embed
+  if (trimmed.startsWith("<iframe")) {
+    const srcMatch = trimmed.match(/src=["']([^"']+)["']/);
+    const src = srcMatch?.[1] ?? "";
+    if (src.includes("youtube.com/embed/") || src.includes("youtube-nocookie.com/embed/")) {
+      return trimmed;
+    }
+  }
+  return "";
 }
 
 export function MediaBlock({
