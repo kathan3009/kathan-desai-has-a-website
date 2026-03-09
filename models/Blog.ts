@@ -16,6 +16,7 @@ const BlogSchema = new mongoose.Schema(
     },
     featuredImage: { type: String, default: "" },
     videoEmbed: { type: String, default: "" },
+    audioUrl: { type: String, default: "" },
     readCount: { type: Number, default: 0 },
     isTopStory: { type: Boolean, default: false },
   },

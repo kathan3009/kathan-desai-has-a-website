@@ -62,6 +62,19 @@ export default async function BlogPostPage({ params }: Props) {
             />
           </div>
         )}
+        {post.audioUrl && (
+          <div className="mb-8 p-4 bg-card rounded-lg border border-border">
+            <p className="text-foreground text-sm font-medium mb-2">Listen to this article</p>
+            <audio
+              controls
+              preload="metadata"
+              className="w-full h-10"
+              src={post.audioUrl}
+            >
+              <a href={post.audioUrl} download>Download audio</a>
+            </audio>
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 mb-8">
           <p className="text-muted text-sm min-w-0 shrink-0">
             {new Date(post.publishedAt).toLocaleDateString("en-US", {

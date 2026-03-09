@@ -7,7 +7,13 @@ import Blog from "@/models/Blog";
 export async function GET() {
   const auth = await isAdminAuthenticated();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await dbConnect();
+  const conn = await dbConnect();
+  if (!conn) {
+    return NextResponse.json(
+      { error: "Database not configured. Set MONGODB_URI in .env.local." },
+      { status: 503 }
+    );
+  }
   const items = await Blog.find().sort({ publishedAt: -1 });
   return NextResponse.json(items);
 }
@@ -15,7 +21,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const auth = await isAdminAuthenticated();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await dbConnect();
+  const conn = await dbConnect();
+  if (!conn) {
+    return NextResponse.json(
+      { error: "Database not configured. Set MONGODB_URI in .env.local." },
+      { status: 503 }
+    );
+  }
   const body = await request.json();
   const item = await Blog.create(sanitizeForMongo(body));
   return NextResponse.json(item);

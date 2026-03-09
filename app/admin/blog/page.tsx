@@ -25,6 +25,7 @@ type Blog = {
   tags: string[];
   featuredImage?: string;
   videoEmbed?: string;
+  audioUrl?: string;
   category?: string;
   isTopStory?: boolean;
   readCount?: number;
@@ -35,10 +36,16 @@ export default function AdminBlogPage() {
   const [editing, setEditing] = useState<Blog | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   async function fetchItems() {
     const res = await fetch("/api/admin/blog");
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      console.error("Blog fetch failed:", res.status, data);
+      setItems([]);
+      return;
+    }
     setItems(Array.isArray(data) ? data : []);
   }
 
@@ -75,6 +82,25 @@ export default function AdminBlogPage() {
     if (!confirm("Delete this post?")) return;
     await fetch(`/api/admin/blog/${id}`, { method: "DELETE" });
     fetchItems();
+  }
+
+  async function handleGenerateAudio(item: Blog) {
+    setGeneratingId(item._id);
+    try {
+      const res = await fetch(`/api/admin/blog/${item._id}/generate-audio`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        fetchItems();
+      } else {
+        alert(data.error || "Failed to generate audio");
+      }
+    } catch {
+      alert("Failed to generate audio");
+    } finally {
+      setGeneratingId(null);
+    }
   }
 
   if (loading) return <p className="text-muted">Loading...</p>;
@@ -114,8 +140,16 @@ export default function AdminBlogPage() {
                 {(item.readCount ?? 0) > 0 && ` · ${item.readCount} views`}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <Link href={`/blogs/${item.slug}`} target="_blank" className="text-muted hover:text-foreground text-sm">View</Link>
+              <button
+                onClick={() => handleGenerateAudio(item)}
+                disabled={generatingId === item._id}
+                className="text-muted hover:text-foreground text-sm disabled:opacity-50"
+                title={item.audioUrl ? "Regenerate audio" : "Generate audiobook"}
+              >
+                {generatingId === item._id ? "Generating…" : item.audioUrl ? "Regen audio" : "Generate audio"}
+              </button>
               <button
                 onClick={() => {
                   setEditing(item);

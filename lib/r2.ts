@@ -120,3 +120,29 @@ export async function uploadToR2(
   const base = publicUrl.replace(/\/$/, "");
   return `${base}/${key}`;
 }
+
+export async function uploadBufferToR2(
+  buffer: Buffer,
+  contentType: string,
+  key: string
+): Promise<string> {
+  const bucket = process.env.R2_BUCKET_NAME;
+  const publicUrl = process.env.R2_PUBLIC_URL;
+
+  if (!bucket || !publicUrl) {
+    throw new Error("R2_BUCKET_NAME and R2_PUBLIC_URL must be set.");
+  }
+
+  const client = getR2Client();
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    })
+  );
+
+  const base = publicUrl.replace(/\/$/, "");
+  return `${base}/${key}`;
+}
