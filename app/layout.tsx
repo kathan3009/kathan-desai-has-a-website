@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { DM_Sans, Geist_Mono } from "next/font/google";
+import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import KonamiTerminal from "@/components/KonamiTerminal";
+import DotGrid from "@/components/DotGrid";
+import CursorTrail from "@/components/CursorTrail";
 import { PersonSchema } from "@/components/schema/Person";
 import { OrganizationSchema } from "@/components/schema/Organization";
 
@@ -41,16 +45,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={geistMono.variable} suppressHydrationWarning>
-      <head>
-        <PersonSchema />
-        <OrganizationSchema />
-      </head>
-      <body className={`${dmSans.className} antialiased min-h-screen flex flex-col`}>
-        <Header />
-        <main className="flex-1 min-h-0">{children}</main>
-        <Footer />
-      </body>
-    </html>
+    <ViewTransitions>
+      <html lang="en" className={geistMono.variable} suppressHydrationWarning>
+        <head>
+          <link rel="preconnect" href="https://pub-e6b13b1038d84eb5b4a3c0cf7bf0e50a.r2.dev" />
+          <link rel="dns-prefetch" href="https://pub-e6b13b1038d84eb5b4a3c0cf7bf0e50a.r2.dev" />
+          <link rel="preconnect" href="https://img.youtube.com" />
+          <link rel="dns-prefetch" href="https://img.youtube.com" />
+          <PersonSchema />
+          <OrganizationSchema />
+        </head>
+        <body className={`${dmSans.className} antialiased min-h-screen flex flex-col`}>
+          <DotGrid />
+          <CursorTrail />
+          <Header />
+          <main className="flex-1 min-h-0">{children}</main>
+          <Footer />
+          <KonamiTerminal />
+        </body>
+      </html>
+    </ViewTransitions>
   );
 }

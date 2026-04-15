@@ -1,17 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import { extractYoutubeId, getYoutubeThumbnailUrl } from "@/lib/youtube";
-
-/**
- * Media display standard — consistent sizing per section type.
- *
- * Variants:
- * - project-card: 16:9, object-contain — logos/product images shown fully (no crop)
- * - blog-banner: 16:9, object-cover — blog cards, fills container, shows YouTube thumbnail when video-only
- * - blog-thumbnail: 3:2, object-contain — small list previews
- * - blog-card: 8:5, object-contain — blog list cards
- * - blog-hero: 21:9, object-cover — full-width post header (shows iframe for video)
- */
 
 type MediaVariant = "project-card" | "blog-banner" | "blog-thumbnail" | "blog-card" | "blog-hero";
 
@@ -26,6 +17,24 @@ const variantConfig: Record<
   "blog-hero": { aspect: "aspect-[21/9]", fit: "cover", padding: "" },
 };
 
+const variantSizes: Record<MediaVariant, string> = {
+  "project-card": "(max-width: 768px) 100vw, 500px",
+  "blog-banner": "(max-width: 1024px) 100vw, 512px",
+  "blog-thumbnail": "96px",
+  "blog-card": "128px",
+  "blog-hero": "(max-width: 768px) 100vw, 768px",
+};
+
+function isOptimizable(url: string): boolean {
+  if (url.startsWith("/")) return true;
+  try {
+    const u = new URL(url);
+    return u.hostname.endsWith(".r2.dev") || u.hostname === "img.youtube.com";
+  } catch {
+    return false;
+  }
+}
+
 type MediaBlockProps = {
   image?: string;
   videoEmbed?: string;
@@ -33,14 +42,13 @@ type MediaBlockProps = {
   alt?: string;
   variant?: MediaVariant;
   className?: string;
-  /** When true (e.g. /blogs/[slug]): show video over image. When false (e.g. /blogs): show image over video. */
+  priority?: boolean;
   prioritizeVideo?: boolean;
 };
 
 function normalizeVideoEmbed(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "";
-  // Raw YouTube URLs -> safe iframe
   const ytEmbed = trimmed.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
   const ytWatch = trimmed.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
   const ytShort = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
@@ -48,7 +56,6 @@ function normalizeVideoEmbed(raw: string): string {
   if (vidId) {
     return `<iframe src="https://www.youtube.com/embed/${vidId}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
   }
-  // Only allow existing iframes that point to YouTube embed
   if (trimmed.startsWith("<iframe")) {
     const srcMatch = trimmed.match(/src=["']([^"']+)["']/);
     const src = srcMatch?.[1] ?? "";
@@ -66,14 +73,17 @@ export function MediaBlock({
   alt = "",
   variant = "project-card",
   className = "",
+  priority = false,
   prioritizeVideo = false,
 }: MediaBlockProps) {
+  const [loaded, setLoaded] = useState(false);
   const youtubeThumbnail = getYoutubeThumbnailUrl(videoEmbed, content);
   const hasVideo = !!(videoEmbed?.trim() || youtubeThumbnail);
   if (!image && !videoEmbed && !youtubeThumbnail) return null;
 
   const { aspect, fit, size, padding } = variantConfig[variant];
   const objectFit = fit === "contain" ? "object-contain" : "object-cover";
+  const sizes = variantSizes[variant];
   const vidIdFromContent = extractYoutubeId(content ?? "");
   const embedHtml =
     videoEmbed
@@ -85,13 +95,10 @@ export function MediaBlock({
   const isProjectCard = variant === "project-card";
   const isBlogBanner = variant === "blog-banner";
 
-  // For card/thumbnail variants: show YouTube thumbnail image instead of iframe (iframe shows black)
-  // For blog-hero: show iframe so users can play video on the post page
   const showThumbnailForVideo =
     youtubeThumbnail &&
     (variant === "blog-banner" || variant === "project-card" || variant === "blog-card" || variant === "blog-thumbnail");
 
-  // prioritizeVideo (e.g. /blogs/[slug]): video over image. Otherwise (/blogs): image over video
   const showVideo = hasVideo && (prioritizeVideo || !image);
   const showIframe = embedHtml && variant === "blog-hero" && showVideo;
   const showImage = image && (!prioritizeVideo || !hasVideo);
@@ -115,11 +122,15 @@ export function MediaBlock({
         />
       ) : showImg && imgSrc ? (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={imgSrc}
             alt={alt}
-            className={`w-full h-full ${objectFit} ${padding} ${isProjectCard && !isBlogBanner ? "media-project-img" : ""}`}
+            fill
+            sizes={sizes}
+            priority={priority}
+            unoptimized={!isOptimizable(imgSrc)}
+            onLoad={() => setLoaded(true)}
+            className={`${objectFit} ${padding ?? ""} ${isProjectCard && !isBlogBanner ? "media-project-img" : ""} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
           />
           {showThumbnail && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">

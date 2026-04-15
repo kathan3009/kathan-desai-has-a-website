@@ -5,6 +5,7 @@ import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
 import { ArticleSchema } from "@/components/schema/Article";
 import { MediaBlock } from "@/components/MediaBlock";
 import { BlogViewTracker } from "@/components/BlogViewTracker";
+import ReadingProgress from "@/components/ReadingProgress";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <>
+      <ReadingProgress />
       <BlogViewTracker slug={post.slug} />
       <BreadcrumbListSchema
         items={[

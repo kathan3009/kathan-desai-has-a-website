@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
 import { extractYoutubeId, getYoutubeThumbnailUrl } from "@/lib/youtube";
@@ -11,6 +12,16 @@ export const metadata = {
 };
 
 export const dynamic = "force-dynamic";
+
+function isOptimizable(url: string): boolean {
+  if (url.startsWith("/")) return true;
+  try {
+    const u = new URL(url);
+    return u.hostname.endsWith(".r2.dev") || u.hostname === "img.youtube.com";
+  } catch {
+    return false;
+  }
+}
 
 type Props = { searchParams: Promise<{ category?: string }> };
 
@@ -129,7 +140,6 @@ type BlogPost = {
 const MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-/** Deterministic date format to avoid server/client hydration mismatch */
 function formatDate(date: Date | string, style: "long" | "short" | "shortNoYear" = "long"): string {
   const d = new Date(date);
   const month = d.getUTCMonth();
@@ -140,15 +150,30 @@ function formatDate(date: Date | string, style: "long" | "short" | "shortNoYear"
   return `${monthStr} ${day}, ${year}`;
 }
 
+function OptimizedThumb({ src, alt = "", dims, children }: { src: string; alt?: string; dims: string; children?: React.ReactNode }) {
+  const small = dims.includes("w-16");
+  return (
+    <div className={`shrink-0 overflow-hidden rounded bg-card ${dims} relative`}>
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes={small ? "64px" : "(max-width: 768px) 100vw, 512px"}
+        className="object-cover"
+        unoptimized={!isOptimizable(src)}
+      />
+      {children}
+    </div>
+  );
+}
+
 function Thumbnail({ src, videoEmbed, content, size = "square" }: { src?: string; videoEmbed?: string; content?: string; size?: "square" | "wide" }) {
   const dims = size === "square" ? "w-16 h-16" : "w-full aspect-video";
   const thumbnailSrc = src ?? getYoutubeThumbnailUrl(videoEmbed, content);
   const hasVideo = !!(videoEmbed?.trim() || extractYoutubeId(content ?? ""));
   if (thumbnailSrc) {
     return (
-      <div className={`shrink-0 overflow-hidden rounded bg-card ${dims} relative`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={thumbnailSrc} alt="" className="w-full h-full object-cover" />
+      <OptimizedThumb src={thumbnailSrc} dims={dims}>
         {!src && hasVideo && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/30">
             <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
@@ -158,7 +183,7 @@ function Thumbnail({ src, videoEmbed, content, size = "square" }: { src?: string
             </div>
           </div>
         )}
-      </div>
+      </OptimizedThumb>
     );
   }
   return (
@@ -171,12 +196,18 @@ function Thumbnail({ src, videoEmbed, content, size = "square" }: { src?: string
 function MostReadItem({ post }: { post: BlogPost }) {
   const thumbSrc = post.featuredImage || getYoutubeThumbnailUrl(post.videoEmbed, post.content);
   return (
-    <Link href={`/blogs/${post.slug}`} className="flex gap-3 group">
+    <Link href={`/blogs/${post.slug}`} className="flex gap-3 group" prefetch={true}>
       <div className="shrink-0 w-16 h-16 rounded overflow-hidden bg-card relative">
         {thumbSrc ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={thumbSrc} alt="" className="w-full h-full object-cover" />
+            <Image
+              src={thumbSrc}
+              alt=""
+              fill
+              sizes="64px"
+              className="object-cover"
+              unoptimized={!isOptimizable(thumbSrc)}
+            />
             {!post.featuredImage && (post.videoEmbed || extractYoutubeId(post.content ?? "")) && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                 <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
@@ -207,12 +238,12 @@ function MostReadItem({ post }: { post: BlogPost }) {
 
 function FeaturedArticle({ post }: { post: BlogPost }) {
   return (
-    <Link href={`/blogs/${post.slug}`} className="block group">
+    <Link href={`/blogs/${post.slug}`} className="block group" prefetch={true}>
       <div>
         <article>
           <div className="overflow-hidden rounded-lg bg-card mb-4 w-full aspect-video">
             {(post.featuredImage || post.videoEmbed || extractYoutubeId(post.content ?? "")) ? (
-              <MediaBlock image={post.featuredImage} videoEmbed={post.videoEmbed} content={post.content} alt={post.title} variant="blog-banner" className="w-full h-full" prioritizeVideo />
+              <MediaBlock image={post.featuredImage} videoEmbed={post.videoEmbed} content={post.content} alt={post.title} variant="blog-banner" className="w-full h-full" prioritizeVideo priority />
             ) : (
               <div className="w-full h-full rounded bg-gradient-to-br from-stone-200 to-stone-100 flex items-center justify-center">
                 <span className="text-muted/60 text-xl font-mono">/</span>
@@ -239,7 +270,7 @@ function FeaturedArticle({ post }: { post: BlogPost }) {
 
 function SubArticle({ post }: { post: BlogPost }) {
   return (
-    <Link href={`/blogs/${post.slug}`} className="flex gap-4 group py-3 border-t border-border">
+    <Link href={`/blogs/${post.slug}`} className="flex gap-4 group py-3 border-t border-border" prefetch={true}>
       <Thumbnail src={post.featuredImage} videoEmbed={post.videoEmbed} content={post.content} size="square" />
       <div className="min-w-0 flex-1">
         <h3 className="text-foreground font-medium group-hover:text-accent transition-colors line-clamp-2">
@@ -255,7 +286,7 @@ function SubArticle({ post }: { post: BlogPost }) {
 
 function LatestItem({ post, isFirst }: { post: BlogPost; isFirst?: boolean }) {
   return (
-    <Link href={`/blogs/${post.slug}`} className="block group">
+    <Link href={`/blogs/${post.slug}`} className="block group" prefetch={true}>
       <div>
       {isFirst ? (
         <article>

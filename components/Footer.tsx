@@ -9,6 +9,9 @@ export default function Footer() {
           <a href="https://www.linkedin.com/in/kathandesai1/" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-accent text-sm transition-colors">LinkedIn</a>
         </div>
       </div>
+      <p className="text-center text-muted/40 text-[10px] tracking-widest uppercase pb-4 select-none">
+        type the magic word to see inside
+      </p>
     </footer>
   );
 }

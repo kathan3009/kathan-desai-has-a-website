@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 
 const navLinks = [
   { href: "/about", label: "About" },
@@ -81,8 +81,8 @@ export default function Header() {
 
       {/* Mobile menu overlay */}
       <div
-        className={`md:hidden fixed inset-0 top-[57px] bg-background transition-opacity duration-200 ${
-          menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        className={`md:hidden fixed inset-0 top-[57px] bg-background transition-[opacity,visibility] duration-200 ${
+          menuOpen ? "opacity-100 visible" : "opacity-0 invisible"
         }`}
         aria-hidden={!menuOpen}
       >
