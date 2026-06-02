@@ -6,6 +6,7 @@ import { ArticleSchema } from "@/components/schema/Article";
 import { MediaBlock } from "@/components/MediaBlock";
 import { BlogViewTracker } from "@/components/BlogViewTracker";
 import ReadingProgress from "@/components/ReadingProgress";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 export const dynamic = "force-dynamic";
 
@@ -100,38 +101,8 @@ export default async function BlogPostPage({ params }: Props) {
             </a>
           </div>
         </div>
-        <div
-          className="prose max-w-none prose-p:text-muted prose-headings:text-foreground prose-a:text-accent"
-          dangerouslySetInnerHTML={{ __html: simpleMarkdown(post.content) }}
-        />
+        <MarkdownRenderer content={post.content} />
       </article>
     </>
   );
-}
-
-function simpleMarkdown(text: string): string {
-  const escaped = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return escaped
-    .replace(/^### (.*)$/gim, "<h3 class='text-lg font-semibold text-foreground mt-6 mb-2'>$1</h3>")
-    .replace(/^## (.*)$/gim, "<h2 class='text-xl font-semibold text-foreground mt-8 mb-3'>$1</h2>")
-    .replace(/^# (.*)$/gim, "<h1 class='text-2xl font-bold text-foreground mt-8 mb-3'>$1</h1>")
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    .replace(/`(.*?)`/g, "<code class='bg-card border border-border px-1 rounded text-accent'>$1</code>")
-    .replace(/\[(.*?)\]\((.*?)\)/g, (_, text, href) => {
-      const trimmed = (href || "").trim();
-      if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) return `[${text}](${href})`;
-      return `<a href="${trimmed.replace(/"/g, "&quot;")}" class="text-accent hover:underline" target="_blank" rel="noopener noreferrer">${text}</a>`;
-    })
-    .split(/\n\n+/)
-    .map((p) => {
-      const t = p.trim();
-      if (!t) return "";
-      if (t.startsWith("<h")) return t;
-      return `<p class="text-muted leading-relaxed mt-4">${t.replace(/\n/g, "<br />")}</p>`;
-    })
-    .join("");
 }
