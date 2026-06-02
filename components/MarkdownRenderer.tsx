@@ -87,7 +87,8 @@ const components: Components = {
     <strong className="font-semibold text-foreground">{children}</strong>
   ),
   em: ({ children }) => <em className="italic">{children}</em>,
-  code: ({ className, children, ...rest }) => {
+  code: (props) => {
+    const { className, children } = props;
     const match = /language-(\w+)/.exec(className ?? "");
     const lang = match?.[1];
     const value = String(children ?? "").replace(/\n$/, "");
@@ -98,17 +99,14 @@ const components: Components = {
 
     if (!className) {
       return (
-        <code
-          className="bg-card border border-border px-1 rounded text-accent text-sm"
-          {...rest}
-        >
+        <code className="bg-card border border-border px-1 rounded text-accent text-sm">
           {children}
         </code>
       );
     }
 
     return (
-      <code className={`text-sm text-foreground font-mono ${className}`} {...rest}>
+      <code className={`text-sm text-foreground font-mono ${className}`}>
         {children}
       </code>
     );
