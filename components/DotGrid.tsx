@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import { useSpidey } from "@/components/spidey/SpideyProvider";
 
 const DOT_SPACING = 28;
 const BASE_RADIUS = 0.8;
@@ -13,6 +14,8 @@ export default function DotGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouse = useRef({ x: -9999, y: -9999 });
   const raf = useRef(0);
+  // In web-slinger mode the 3D lattice and halftone screen take over this layer.
+  const { spidey } = useSpidey();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -98,7 +101,9 @@ export default function DotGrid() {
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseleave", onLeave);
     };
-  }, []);
+  }, [spidey]);
+
+  if (spidey) return null;
 
   return (
     <canvas

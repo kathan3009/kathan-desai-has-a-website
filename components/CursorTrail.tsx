@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import { useSpidey } from "@/components/spidey/SpideyProvider";
 
 const TRAIL_LENGTH = 16;
 const MAX_RADIUS = 6;
@@ -15,6 +16,12 @@ export default function CursorTrail() {
   const mouse = useRef<Point>({ x: -9999, y: -9999 });
   const raf = useRef(0);
   const active = useRef(false);
+  const { spidey } = useSpidey();
+  const spideyRef = useRef(spidey);
+
+  useEffect(() => {
+    spideyRef.current = spidey;
+  }, [spidey]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -53,15 +60,37 @@ export default function CursorTrail() {
         if (list.length > TRAIL_LENGTH) list.shift();
       }
 
-      for (let i = 0; i < list.length; i++) {
-        const t = i / (list.length - 1 || 1);
-        const radius = MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * t;
-        const alpha = MAX_ALPHA * t * t;
+      if (spideyRef.current) {
+        // Web-shooter: one continuous silk strand with anchor beads, not dots.
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        for (let i = 1; i < list.length; i++) {
+          const t = i / (list.length - 1 || 1);
+          ctx.beginPath();
+          ctx.moveTo(list[i - 1].x, list[i - 1].y);
+          ctx.lineTo(list[i].x, list[i].y);
+          ctx.lineWidth = 0.6 + 1.6 * t;
+          ctx.strokeStyle = `rgba(36,232,222,${0.45 * t * t})`;
+          ctx.stroke();
 
-        ctx.beginPath();
-        ctx.arc(list[i].x, list[i].y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(184,115,51,${alpha})`;
-        ctx.fill();
+          if (i % 4 === 0) {
+            ctx.beginPath();
+            ctx.arc(list[i].x, list[i].y, 1 + 1.4 * t, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(240,244,255,${0.5 * t})`;
+            ctx.fill();
+          }
+        }
+      } else {
+        for (let i = 0; i < list.length; i++) {
+          const t = i / (list.length - 1 || 1);
+          const radius = MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * t;
+          const alpha = MAX_ALPHA * t * t;
+
+          ctx.beginPath();
+          ctx.arc(list[i].x, list[i].y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(184,115,51,${alpha})`;
+          ctx.fill();
+        }
       }
 
       raf.current = requestAnimationFrame(draw);

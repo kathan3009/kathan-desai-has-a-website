@@ -5,6 +5,7 @@
   --background: #f5f0e8;
   --foreground: #1c1917;
   --accent: #b87333;
+  --accent-rgb: 184, 115, 51;
   --muted: #78716c;
   --card: #e8e2d8;
   --border: #ddd6cb;
@@ -50,7 +51,7 @@ a:hover {
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .card:hover {
-  border-color: rgba(184, 115, 51, 0.4);
+  border-color: rgba(var(--accent-rgb), 0.4);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -93,4 +94,207 @@ a:hover {
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WEB-SLINGER MODE
+   Night-skyline void, arachnid red, suit blue, spider-sense cyan.
+   Everything below is scoped to [data-theme="spidey"] so the
+   default beige site is untouched.
+   ═══════════════════════════════════════════════════════════ */
+
+[data-theme="spidey"] {
+  color-scheme: dark;
+
+  --background: #07060f;
+  --foreground: #f0f2ff;
+  /* Bright enough to clear 4.5:1 as link text on the void */
+  --accent: #f0303e;
+  --accent-rgb: 240, 48, 62;
+  --muted: #8b90c4;
+  --card: #12102b;
+  --border: #2c2a5c;
+
+  /* Mode-only tokens */
+  --suit-blue: #2b54ff;
+  --sense: #24e8de;
+  --ink: #04030a;
+  /* Deeper red for filled surfaces, so white sits on it at 5.4:1 */
+  --caption: #cf1b29;
+
+  --card-shadow: 4px 4px 0 rgba(var(--accent-rgb), 0.9);
+}
+
+[data-theme="spidey"] body {
+  /* Skyline glow: red from below-left, blue from above-right */
+  background-image:
+    radial-gradient(ellipse 90% 60% at 12% 108%, rgba(240, 48, 62, 0.16), transparent 70%),
+    radial-gradient(ellipse 80% 55% at 92% -8%, rgba(43, 84, 255, 0.18), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* Ben-day dot screen — red and blue plates, deliberately misregistered */
+.halftone {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 600ms ease;
+  background-image:
+    radial-gradient(circle, rgba(240, 48, 62, 0.16) 1.05px, transparent 1.4px),
+    radial-gradient(circle, rgba(43, 84, 255, 0.14) 1.05px, transparent 1.4px);
+  background-size: 6px 6px, 6px 6px;
+  background-position: 0 0, 3px 3px;
+}
+[data-theme="spidey"] .halftone {
+  opacity: 1;
+}
+
+/* Painted skyline behind the webbing. Loaded as a background image so a
+   missing file (art never generated) renders nothing rather than breaking. */
+.skyline {
+  position: fixed;
+  inset: auto 0 0 0;
+  height: min(46vh, 420px);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 700ms ease;
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: cover;
+  /* The art is drawn on pure black, so screen drops the ground out and leaves
+     only the rim light and lit windows over the void. */
+  mix-blend-mode: screen;
+  mask-image: linear-gradient(to bottom, transparent, #000 38%);
+}
+/* Declared only inside the mode, so the default site never fetches the image. */
+[data-theme="spidey"] .skyline {
+  background-image: url("/spidey/skyline.jpg");
+  opacity: 0.58;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skyline {
+    transition: none;
+  }
+}
+
+/* Display face — heavy grotesque, comic-cover weight */
+[data-theme="spidey"] h1,
+[data-theme="spidey"] h2,
+[data-theme="spidey"] h3 {
+  font-family: var(--font-display), "DM Sans", sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Section headings become narration caption boxes */
+[data-theme="spidey"] h2.uppercase.tracking-wider {
+  display: inline-block;
+  background: var(--caption);
+  color: #fff;
+  padding: 0.35rem 0.8rem 0.4rem;
+  border: 2px solid var(--ink);
+  border-radius: 2px;
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: skewX(-5deg);
+  letter-spacing: 0.14em;
+}
+
+/* Cards become inked comic panels — hard shadow, zero blur */
+[data-theme="spidey"] .card {
+  border: 2px solid var(--ink);
+  border-radius: 2px;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+[data-theme="spidey"] .card:hover {
+  border-color: var(--sense);
+  box-shadow: 6px 6px 0 var(--sense);
+  transform: translate(-2px, -2px);
+}
+
+[data-theme="spidey"] .media-project-card {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(43, 84, 255, 0.22) 1px,
+    transparent 0
+  );
+}
+[data-theme="spidey"] .media-project-img {
+  filter: saturate(1.15) contrast(1.15);
+}
+
+[data-theme="spidey"] ::selection {
+  background: var(--sense);
+  color: var(--ink);
+}
+
+[data-theme="spidey"] :focus-visible {
+  outline: 2px solid var(--sense);
+  outline-offset: 2px;
+}
+
+/* Toggle: web glyph that spins its strands out on activation */
+.web-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: transparent;
+  transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease;
+}
+.web-toggle:hover {
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.5);
+}
+.web-toggle[aria-pressed="true"] {
+  color: #fff;
+  background: var(--caption, var(--accent));
+  border-color: var(--ink, transparent);
+}
+.web-toggle svg {
+  position: relative;
+  z-index: 1;
+  transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.web-toggle[aria-pressed="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* Spider-sense: concentric arcs pulsing off the live toggle */
+.sense-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--sense);
+  opacity: 0;
+}
+.web-toggle[aria-pressed="true"] .sense-ring {
+  animation: sense-pulse 2.4s ease-out infinite;
+}
+.web-toggle[aria-pressed="true"] .sense-ring:nth-child(2) {
+  animation-delay: 0.8s;
+}
+@keyframes sense-pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  70% { transform: scale(1.85); opacity: 0; }
+  100% { transform: scale(1.85); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .web-toggle[aria-pressed="true"] .sense-ring {
+    animation: none;
+  }
+  .web-toggle svg {
+    transition: none;
+  }
+  .halftone {
+    transition: none;
+  }
 }
