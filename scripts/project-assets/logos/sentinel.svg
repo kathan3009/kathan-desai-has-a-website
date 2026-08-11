@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420">
+  <rect width="1400" height="420" rx="44" fill="#10191b"/>
+  <g transform="translate(78 62)">
+    <path d="M148 0 278 48v98c0 82-49 128-130 151C67 274 18 228 18 146V48Z" fill="none" stroke="#62e6c8" stroke-width="16"/>
+    <circle cx="92" cy="124" r="18" fill="#f5b95f"/><circle cx="204" cy="124" r="18" fill="#f5b95f"/><circle cx="148" cy="210" r="18" fill="#62e6c8"/>
+    <path d="M108 124h80M101 140l37 56m57-56-37 56" stroke="#e9fff9" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="430" y="190" fill="#f4fbf9" font-family="Arial,Helvetica,sans-serif" font-size="116" font-weight="800" letter-spacing="8">SENTINEL</text>
+  <text x="438" y="270" fill="#8eb9b0" font-family="Arial,Helvetica,sans-serif" font-size="35" font-weight="700" letter-spacing="7">SEMANTIC BROWSER RUNTIME</text>
+</svg>

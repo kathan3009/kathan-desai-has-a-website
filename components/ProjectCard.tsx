@@ -10,6 +10,7 @@ type ProjectCardProps = {
     repoUrl?: string;
     liveUrl?: string;
     image?: string;
+    status?: "active" | "in-development" | "production" | "beta" | "prototype" | "concept" | "archived";
   };
   className?: string;
 };
@@ -25,8 +26,17 @@ export function ProjectCard({ item, className = "" }: ProjectCardProps) {
       rel="noopener noreferrer"
       className={`card block p-4 overflow-hidden hover:border-accent/30 transition-colors ${className}`}
     >
-      <p className="text-foreground font-medium mb-3">{item.name}</p>
-      <div className="rounded overflow-hidden w-full h-20 mb-3 bg-card">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <p className="text-foreground font-medium">{item.name}</p>
+        {item.status && (
+          <span
+            className={`project-status shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${statusStyles[item.status]}`}
+          >
+            {statusLabels[item.status]}
+          </span>
+        )}
+      </div>
+      <div className="rounded-md overflow-hidden w-full h-28 mb-4 bg-card">
         {hasMedia ? (
           <MediaBlock image={item.image} alt={item.name} variant="project-card" className="w-full h-full" />
         ) : (
@@ -40,3 +50,23 @@ export function ProjectCard({ item, className = "" }: ProjectCardProps) {
     </Link>
   );
 }
+
+const statusLabels = {
+  active: "Active",
+  "in-development": "In development",
+  production: "Production",
+  beta: "Beta",
+  prototype: "Prototype",
+  concept: "Concept",
+  archived: "Archived",
+} as const;
+
+const statusStyles = {
+  active: "project-status-active",
+  "in-development": "project-status-development",
+  production: "project-status-production",
+  beta: "project-status-beta",
+  prototype: "project-status-prototype",
+  concept: "project-status-concept",
+  archived: "project-status-archived",
+} as const;

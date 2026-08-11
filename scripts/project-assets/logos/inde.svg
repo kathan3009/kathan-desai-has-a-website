@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420">
+  <rect width="1400" height="420" rx="44" fill="#231a16"/>
+  <g transform="translate(78 68)" fill="none" stroke="#d5a35d" stroke-width="10">
+    <path d="m142 0 40 92 102 50-102 50-40 92-40-92L0 142l102-50Z"/>
+    <circle cx="142" cy="142" r="72"/><path d="m142 70 72 72-72 72-72-72Z"/>
+  </g>
+  <text x="430" y="205" fill="#f7efe4" font-family="Georgia,serif" font-size="158" font-weight="700" letter-spacing="18">INDE</text>
+  <text x="443" y="280" fill="#c9aa83" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="700" letter-spacing="8">CRAFT · SILHOUETTE · STORY</text>
+</svg>

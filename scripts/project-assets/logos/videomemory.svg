@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420">
+  <rect width="1400" height="420" rx="44" fill="#171426"/>
+  <g transform="translate(78 78)">
+    <rect x="0" y="0" width="296" height="264" rx="38" fill="none" stroke="#a99cff" stroke-width="15"/>
+    <path d="M72 0v264M224 0v264" stroke="#a99cff" stroke-width="10" stroke-dasharray="24 24"/>
+    <circle cx="148" cy="132" r="60" fill="none" stroke="#f5c86b" stroke-width="12"/><circle cx="148" cy="132" r="18" fill="#f5c86b"/>
+    <path d="M148 50v34M148 180v34M66 132h34M196 132h34" stroke="#fff8e7" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="430" y="190" fill="#fbf9ff" font-family="Arial,Helvetica,sans-serif" font-size="102" font-weight="800">VideoMemory</text>
+  <text x="438" y="270" fill="#aaa2d1" font-family="Arial,Helvetica,sans-serif" font-size="35" font-weight="700" letter-spacing="6">SEARCH LONG VIDEO BY MEANING</text>
+</svg>

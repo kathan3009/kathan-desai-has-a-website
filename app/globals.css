@@ -55,21 +55,27 @@ a:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Project card media — fixed pattern, uniform design, theme-colored images */
+/* Project card media — dedicated logo tiles, not editorial cover thumbnails */
 .media-project-card {
-  background-color: var(--card);
-  background-image: radial-gradient(
-    circle at 1px 1px,
-    rgba(184, 115, 51, 0.12) 1px,
-    transparent 0
-  );
-  background-size: 12px 12px;
-  background-position: 0 0;
+  background-color: #171411;
+  border: 1px solid rgba(184, 115, 51, 0.24);
 }
 .media-project-img {
-  /* Muted grayscale — aligns with beige/copper theme without color distortion */
-  filter: grayscale(0.6) contrast(1.05);
+  filter: none;
 }
+
+/* Status is information, not decoration: these combinations all clear WCAG AA. */
+.project-status {
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.project-status-active { background: #155e75; border-color: #0e7490; color: #ecfeff; }
+.project-status-development { background: #92400e; border-color: #b45309; color: #fffbeb; }
+.project-status-production { background: #166534; border-color: #15803d; color: #f0fdf4; }
+.project-status-beta { background: #5b21b6; border-color: #6d28d9; color: #f5f3ff; }
+.project-status-prototype { background: #86198f; border-color: #a21caf; color: #fdf4ff; }
+.project-status-concept { background: #44403c; border-color: #57534e; color: #fafaf9; }
+.project-status-archived { background: #991b1b; border-color: #b91c1c; color: #fef2f2; }
 
 /* Hide scrollbar for carousel while keeping scroll functionality */
 .scrollbar-hide {
@@ -215,11 +221,8 @@ a:hover {
 }
 
 [data-theme="spidey"] .media-project-card {
-  background-image: radial-gradient(
-    circle at 1px 1px,
-    rgba(43, 84, 255, 0.22) 1px,
-    transparent 0
-  );
+  background-color: #080713;
+  border-color: rgba(36, 232, 222, 0.4);
 }
 [data-theme="spidey"] .media-project-img {
   filter: saturate(1.15) contrast(1.15);
