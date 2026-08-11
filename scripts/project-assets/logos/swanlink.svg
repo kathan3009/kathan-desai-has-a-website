@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420">
+  <rect width="1400" height="420" rx="44" fill="#101722"/>
+  <g transform="translate(72 64)">
+    <path d="M88 247c76 34 169 9 209-55-65 30-106 8-122-29-17-40 2-74 49-104-61-8-113 16-141 63-16 27-18 73 5 125Z" fill="none" stroke="#f6f7fb" stroke-width="16" stroke-linejoin="round"/>
+    <path d="m222 60 67-15-38 50" fill="none" stroke="#67b9ff" stroke-width="14" stroke-linejoin="round"/>
+    <circle cx="224" cy="93" r="8" fill="#f5b95f"/>
+    <circle cx="48" cy="276" r="14" fill="#67b9ff"/><circle cx="172" cy="292" r="14" fill="#67b9ff"/><circle cx="306" cy="249" r="14" fill="#67b9ff"/>
+    <path d="M60 274l98 15m28-1 106-34" stroke="#67b9ff" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <text x="430" y="190" fill="#f6f8ff" font-family="Arial,Helvetica,sans-serif" font-size="114" font-weight="800" letter-spacing="5">SWANLINK</text>
+  <text x="438" y="270" fill="#91a8c5" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="700" letter-spacing="6">DETERMINISTIC AGENT COORDINATION</text>
+</svg>

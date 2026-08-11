@@ -1,4 +1,3 @@
-import Link from "next/link";
 import dbConnect from "@/lib/db";
 import Project from "@/models/Project";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
@@ -55,4 +54,3 @@ export default async function ProjectsPage() {
     </>
   );
 }
-

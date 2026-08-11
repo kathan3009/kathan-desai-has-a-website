@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+.env*
+brag-output
+brag-output-*
+
+# Final portfolio masters and posters under scripts/project-assets are intentionally
+# included so the one-time production build can publish them to Cloudflare R2.

@@ -7,6 +7,8 @@ type ArticleSchemaProps = {
   dateModified: string;
   image?: string;
   url: string;
+  authorName?: string;
+  authorUrl?: string;
 };
 
 export function ArticleSchema({
@@ -16,6 +18,8 @@ export function ArticleSchema({
   dateModified,
   image,
   url,
+  authorName = "Kathan Desai",
+  authorUrl = `${SITE_URL}/about`,
 }: ArticleSchemaProps) {
   const schema = {
     "@context": "https://schema.org",
@@ -27,13 +31,13 @@ export function ArticleSchema({
     url: url.startsWith("http") ? url : `${SITE_URL}${url}`,
     author: {
       "@type": "Person",
-      name: "Kathan Desai",
-      url: SITE_URL,
+      name: authorName,
+      url: authorUrl,
     },
     publisher: {
       "@type": "Organization",
       name: "Kathan Desai",
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` },
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.svg` },
     },
     ...(image && { image }),
   };

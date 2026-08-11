@@ -11,13 +11,28 @@ type Project = {
   liveUrl: string;
   image: string;
   type: "py" | "other";
+  status: "active" | "in-development" | "production" | "beta" | "prototype" | "concept" | "archived";
   order: number;
+};
+
+type ProjectStatus = Project["status"];
+
+const emptyForm = {
+  name: "",
+  description: "",
+  techStack: "",
+  repoUrl: "",
+  liveUrl: "",
+  image: "",
+  type: "other" as "py" | "other",
+  status: "active" as ProjectStatus,
+  order: 0,
 };
 
 export default function AdminProjectsPage() {
   const [items, setItems] = useState<Project[]>([]);
   const [editing, setEditing] = useState<Project | null>(null);
-  const [form, setForm] = useState({ name: "", description: "", techStack: "", repoUrl: "", liveUrl: "", image: "", type: "other" as "py" | "other", order: 0 });
+  const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
 
   async function fetchItems() {
@@ -27,7 +42,10 @@ export default function AdminProjectsPage() {
   }
 
   useEffect(() => {
-    fetchItems().finally(() => setLoading(false));
+    fetch("/api/admin/projects")
+      .then((res) => res.json())
+      .then((data) => setItems(Array.isArray(data) ? data : []))
+      .finally(() => setLoading(false));
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -41,7 +59,7 @@ export default function AdminProjectsPage() {
       body: JSON.stringify(body),
     });
     if (res.ok) {
-      setForm({ name: "", description: "", techStack: "", repoUrl: "", liveUrl: "", image: "", type: "other", order: 0 });
+      setForm(emptyForm);
       setEditing(null);
       fetchItems();
     }
@@ -69,9 +87,18 @@ export default function AdminProjectsPage() {
           <option value="other">Other</option>
           <option value="py">Python</option>
         </select>
+        <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as ProjectStatus })} className="w-full px-3 py-2 bg-card border border-border rounded text-foreground">
+          <option value="active">Active</option>
+          <option value="in-development">In development</option>
+          <option value="production">Production</option>
+          <option value="beta">Beta</option>
+          <option value="prototype">Prototype</option>
+          <option value="concept">Concept</option>
+          <option value="archived">Archived</option>
+        </select>
         <div className="flex gap-2">
           <button type="submit" className="px-4 py-2 bg-accent text-black font-medium rounded">{editing ? "Update" : "Add"}</button>
-          {editing && <button type="button" onClick={() => { setEditing(null); setForm({ name: "", description: "", techStack: "", repoUrl: "", liveUrl: "", image: "", type: "other", order: 0 }); }} className="px-4 py-2 text-muted hover:text-foreground">Cancel</button>}
+          {editing && <button type="button" onClick={() => { setEditing(null); setForm(emptyForm); }} className="px-4 py-2 text-muted hover:text-foreground">Cancel</button>}
         </div>
       </form>
       <div className="space-y-2">
@@ -79,10 +106,10 @@ export default function AdminProjectsPage() {
           <div key={item._id} className="p-4 bg-card rounded border border-border flex justify-between items-start">
             <div>
               <p className="text-foreground font-medium">{item.name}</p>
-              <p className="text-muted text-sm">{item.type} · {item.techStack?.join(", ") || "—"}</p>
+              <p className="text-muted text-sm">{item.status || "active"} · {item.type} · {item.techStack?.join(", ") || "—"}</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => { setEditing(item); setForm({ name: item.name, description: item.description, techStack: item.techStack?.join(", ") || "", repoUrl: item.repoUrl || "", liveUrl: item.liveUrl || "", image: item.image || "", type: item.type, order: item.order }); }} className="text-accent hover:underline text-sm">Edit</button>
+              <button onClick={() => { setEditing(item); setForm({ name: item.name, description: item.description, techStack: item.techStack?.join(", ") || "", repoUrl: item.repoUrl || "", liveUrl: item.liveUrl || "", image: item.image || "", type: item.type, status: item.status || "active", order: item.order }); }} className="text-accent hover:underline text-sm">Edit</button>
               <button onClick={() => handleDelete(item._id)} className="text-red-400 hover:underline text-sm">Delete</button>
             </div>
           </div>

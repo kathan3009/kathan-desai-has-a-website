@@ -14,7 +14,7 @@ const variantConfig: Record<
   "blog-banner": { aspect: "", fit: "cover", padding: "", size: "w-full h-full" },
   "blog-thumbnail": { aspect: "aspect-[3/2]", fit: "contain", size: "w-24 h-16 shrink-0", padding: "p-1" },
   "blog-card": { aspect: "aspect-[8/5]", fit: "contain", size: "w-32 h-20 shrink-0", padding: "p-1" },
-  "blog-hero": { aspect: "aspect-[21/9]", fit: "cover", padding: "" },
+  "blog-hero": { aspect: "aspect-video", fit: "cover", padding: "" },
 };
 
 const variantSizes: Record<MediaVariant, string> = {
@@ -30,6 +30,15 @@ function isOptimizable(url: string): boolean {
   try {
     const u = new URL(url);
     return u.hostname.endsWith(".r2.dev") || u.hostname === "img.youtube.com";
+  } catch {
+    return false;
+  }
+}
+
+function isDirectVideo(url?: string): boolean {
+  if (!url) return false;
+  try {
+    return /\.(mp4|webm|mov)(?:$|[?#])/i.test(new URL(url, "https://portfolio.local").pathname);
   } catch {
     return false;
   }
@@ -78,7 +87,8 @@ export function MediaBlock({
 }: MediaBlockProps) {
   const [loaded, setLoaded] = useState(false);
   const youtubeThumbnail = getYoutubeThumbnailUrl(videoEmbed, content);
-  const hasVideo = !!(videoEmbed?.trim() || youtubeThumbnail);
+  const directVideo = isDirectVideo(videoEmbed) ? videoEmbed?.trim() : "";
+  const hasVideo = !!(directVideo || videoEmbed?.trim() || youtubeThumbnail);
   if (!image && !videoEmbed && !youtubeThumbnail) return null;
 
   const { aspect, fit, size, padding } = variantConfig[variant];
@@ -100,8 +110,10 @@ export function MediaBlock({
     (variant === "blog-banner" || variant === "project-card" || variant === "blog-card" || variant === "blog-thumbnail");
 
   const showVideo = hasVideo && (prioritizeVideo || !image);
-  const showIframe = embedHtml && variant === "blog-hero" && showVideo;
-  const showImage = image && (!prioritizeVideo || !hasVideo);
+  const showDirectVideo = directVideo && variant === "blog-hero" && showVideo;
+  const showIframe = !showDirectVideo && embedHtml && variant === "blog-hero" && showVideo;
+  // Direct video is playable only in the article hero; listings retain the editorial poster.
+  const showImage = image && (!prioritizeVideo || !hasVideo || (!!directVideo && variant !== "blog-hero"));
   const showThumbnail = hasVideo && showThumbnailForVideo && (prioritizeVideo || !image);
   const showImg = showImage || showThumbnail;
   const imgSrc = showImage ? image : showThumbnail ? youtubeThumbnail : null;
@@ -115,7 +127,17 @@ export function MediaBlock({
         ${className}
       `}
     >
-      {showIframe ? (
+      {showDirectVideo ? (
+        <video
+          className="absolute inset-0 h-full w-full bg-black object-cover"
+          src={directVideo}
+          poster={image}
+          controls
+          playsInline
+          preload="metadata"
+          aria-label={`${alt} product explainer`}
+        />
+      ) : showIframe ? (
         <div
           className="absolute inset-0 [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:w-full [&>iframe]:h-full"
           dangerouslySetInnerHTML={{ __html: embedHtml }}

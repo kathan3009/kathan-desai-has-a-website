@@ -17,9 +17,28 @@ export async function generateMetadata({ params }: Props) {
   const conn = await dbConnect();
   const post = conn ? await Blog.findOne({ slug }) : null;
   if (!post) return { title: "Not Found" };
+  const description = post.excerpt || post.content.slice(0, 160);
+  const canonical = `/blogs/${post.slug}`;
   return {
     title: post.title,
-    description: post.excerpt || post.content.slice(0, 160),
+    description,
+    authors: [{ name: post.author?.name || "Kathan Desai", url: post.author?.url || "/about" }],
+    alternates: { canonical },
+    openGraph: {
+      type: "article" as const,
+      title: post.title,
+      description,
+      url: canonical,
+      publishedTime: new Date(post.publishedAt).toISOString(),
+      modifiedTime: new Date(post.dateModified || post.updatedAt).toISOString(),
+      images: post.featuredImage ? [{ url: post.featuredImage, alt: post.title }] : [],
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title: post.title,
+      description,
+      images: post.featuredImage ? [post.featuredImage] : [],
+    },
   };
 }
 
@@ -50,6 +69,8 @@ export default async function BlogPostPage({ params }: Props) {
         dateModified={new Date(post.dateModified || post.updatedAt).toISOString()}
         image={post.featuredImage}
         url={url}
+        authorName={post.author?.name}
+        authorUrl={post.author?.url}
       />
       <article className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">{post.title}</h1>

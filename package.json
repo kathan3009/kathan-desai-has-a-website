@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/sync-portfolio-projects.mjs --if-enabled",
     "start": "next start",
     "lint": "eslint",
-    "spidey:art": "node --env-file-if-exists=.env.local scripts/generate-spidey-art.mjs"
+    "spidey:art": "node --env-file-if-exists=.env.local scripts/generate-spidey-art.mjs",
+    "portfolio:sync": "node --env-file-if-exists=.env.local scripts/sync-portfolio-projects.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1004.0",

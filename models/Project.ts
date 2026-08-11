@@ -9,6 +9,11 @@ const ProjectSchema = new mongoose.Schema(
     liveUrl: { type: String, default: "" },
     image: { type: String, default: "" },
     type: { type: String, enum: ["py", "other"], default: "other" },
+    status: {
+      type: String,
+      enum: ["active", "in-development", "production", "beta", "prototype", "concept", "archived"],
+      default: "active",
+    },
     publishedAt: { type: Date, default: Date.now },
     order: { type: Number, default: 0 },
   },

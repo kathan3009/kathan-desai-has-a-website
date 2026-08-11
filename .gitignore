@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated Brag / HyperFrames sources and renders. Final videos are published to R2.
+/brag-output/
+/brag-output-*/
+/scripts/project-assets/posters/
+/scripts/project-assets/videos/
+
+# Temporary PDF research, renders, and isolated generation dependencies.
+/tmp/pdfs/
+
+# Local agent tooling and generated document exports.
+/.agents/
+/output/
