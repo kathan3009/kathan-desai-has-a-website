@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Link } from 'next-view-transitions';
+import Link from 'next/link';
 const links=[['/projects','Projects'],['/blogs','Writing'],['/photography','Photography'],['/about','About']];
 export default function Header(){const path=usePathname();const [menu,setMenu]=useState(false);const home=path==='/';const menuButton=useRef<HTMLButtonElement>(null);
 useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==='Escape' && menu){setMenu(false);menuButton.current?.focus();}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[menu]);

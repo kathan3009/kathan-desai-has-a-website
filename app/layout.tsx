@@ -5,7 +5,6 @@ import '@fontsource/manrope/latin-500.css';
 import '@fontsource/manrope/latin-600.css';
 import '@fontsource/newsreader/latin-400.css';
 import '@fontsource/newsreader/latin-500.css';
-import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -43,12 +42,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ViewTransitions>
-      <html
-        lang="en"
-
-        suppressHydrationWarning
-      >
+    <html
+      lang="en"
+      suppressHydrationWarning
+    >
         <head>
           <script dangerouslySetInnerHTML={{ __html: SPIDEY_INIT }} />
           <link rel="preconnect" href="https://pub-e6b13b1038d84eb5b4a3c0cf7bf0e50a.r2.dev" />
@@ -68,7 +65,6 @@ export default function RootLayout({
             <KonamiTerminal />
           </SpideyProvider>
         </body>
-      </html>
-    </ViewTransitions>
+    </html>
   );
 }
