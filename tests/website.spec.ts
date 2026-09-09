@@ -32,6 +32,7 @@ test('real projects, article content and persistent reader settings',async({page
  await expect(page.locator('#reading-article')).toBeVisible();await page.locator('summary[aria-controls="reading-settings"]').click();
  await page.getByRole('button',{name:'Dark',exact:true}).click();await page.reload();
  await expect(page.locator('[data-reading-theme="dark"]')).toBeVisible();
+ await page.goto('/blogs/videomemory-searchable-memory-for-ai-agents');const diagram=page.locator('figure[aria-label="Article diagram"] [role="region"]');await expect(diagram).toBeVisible();const dimensions=await diagram.evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth,height:el.getBoundingClientRect().height}));expect(dimensions.scroll).toBeGreaterThan(dimensions.client);expect(dimensions.height).toBeGreaterThan(100);
 });
 test('real photography supports deep links, filters, full-size viewing and Escape',async({page})=>{
  test.skip(!real,'Run against Vercel with TEST_REAL_CONTENT=1');
@@ -39,4 +40,5 @@ test('real photography supports deep links, filters, full-size viewing and Escap
  const photos=page.locator('button[aria-label^="Open photograph "]');await expect(photos).toHaveCount(6);const photo=photos.first();await expect(photo).toBeVisible();await photo.click();
  await expect(page.getByRole('dialog')).toBeVisible();await expect(page).toHaveURL(/photo=/);const url=page.url();await page.reload();
  await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);expect(page.url()).not.toEqual(url);
+ const reopened=Date.now();await photo.click();await expect(page.getByRole('dialog')).toBeVisible();expect(Date.now()-reopened).toBeLessThan(1500);await page.keyboard.press('Escape');
 });

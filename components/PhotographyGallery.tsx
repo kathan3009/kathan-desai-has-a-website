@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback, useId } from "react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import styles from "./photography/photography.module.css";
 
 export type PhotoItem = {
@@ -14,6 +13,16 @@ export type PhotoItem = {
 
 type ViewMode = "list" | "grid";
 const EAGER_GRID_COUNT = 6;
+
+function writeHistory(method: "push" | "replace", state: Record<string, unknown>, url: URL) {
+  // Call the native History method so a query-only lightbox change does not
+  // enter the app-wide page transition. The gallery owns this URL state.
+  if (method === "push") {
+    History.prototype.pushState.call(window.history, state, "", url);
+  } else {
+    History.prototype.replaceState.call(window.history, state, "", url);
+  }
+}
 
 // Keep this aligned with next.config.ts; other sources use their original URL.
 function isOptimizable(url: string): boolean {
@@ -33,8 +42,15 @@ export default function PhotographyGallery({ photos }: { photos: PhotoItem[] }) 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
-  // The URL is the source of truth, including direct visits and Back/Forward.
-  const selectedPhotoId = useSearchParams().get("photo");
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const syncFromUrl = () => setSelectedPhotoId(new URL(window.location.href).searchParams.get("photo"));
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
+  }, []);
+
   const closeLightbox = useCallback(() => {
     if (window.history.state?.photographyGallery) {
       window.history.back();
@@ -42,7 +58,8 @@ export default function PhotographyGallery({ photos }: { photos: PhotoItem[] }) 
       // A landing-page or shared link should close here, not leave the gallery.
       const url = new URL(window.location.href);
       url.searchParams.delete("photo");
-      window.history.replaceState(null, "", url);
+      writeHistory("replace", { ...(window.history.state || {}), photographyGallery: false }, url);
+      setSelectedPhotoId(null);
     }
   }, []);
   const searchId = useId();
@@ -61,15 +78,17 @@ export default function PhotographyGallery({ photos }: { photos: PhotoItem[] }) 
 
   const openPhoto = (index: number) => {
     const url = new URL(window.location.href);
-    url.searchParams.set("photo", visiblePhotos[index]._id);
-    window.history.pushState({ photographyGallery: true }, "", url);
+    const id = visiblePhotos[index]._id;
+    url.searchParams.set("photo", id);
+    writeHistory("push", { ...(window.history.state || {}), photographyGallery: true }, url);
+    setSelectedPhotoId(id);
   };
   const navigatePhoto = (index: number) => {
     const url = new URL(window.location.href);
-    url.searchParams.set("photo", lightboxPhotos[index]._id);
-    // Next copies its internal router state itself. Passing it explicitly would
-    // bypass its URL synchronization and leave useSearchParams stale.
-    window.history.replaceState({ photographyGallery: !!window.history.state?.photographyGallery }, "", url);
+    const id = lightboxPhotos[index]._id;
+    url.searchParams.set("photo", id);
+    writeHistory("replace", { ...(window.history.state || {}), photographyGallery: !!window.history.state?.photographyGallery }, url);
+    setSelectedPhotoId(id);
   };
 
   if (!photos.length) {

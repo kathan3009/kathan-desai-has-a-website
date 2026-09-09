@@ -28,6 +28,8 @@ export function MermaidDiagram({ code }: { code: string }) {
           securityLevel: "loose",
           fontFamily: "Manrope, system-ui, sans-serif",
           suppressErrorRendering: true,
+          flowchart: { useMaxWidth: false },
+          sequence: { useMaxWidth: false },
         });
         const { svg, bindFunctions } = await mermaid.render(id, code);
         if (!cancelled && ref.current) {
