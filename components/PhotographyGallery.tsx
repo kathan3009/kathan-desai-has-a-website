@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useId } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import styles from "./photography/photography.module.css";
 
 export type PhotoItem = {
   _id: string;
@@ -11,441 +13,306 @@ export type PhotoItem = {
 };
 
 type ViewMode = "list" | "grid";
-
 const EAGER_GRID_COUNT = 6;
 
+// Keep this aligned with next.config.ts; other sources use their original URL.
 function isOptimizable(url: string): boolean {
+  if (url.startsWith("/") && !url.startsWith("//")) return true;
   try {
     const u = new URL(url);
-    return u.hostname.endsWith(".r2.dev") || u.hostname === "img.youtube.com";
+    return u.protocol === "https:" && (
+      u.hostname === "pub-e6b13b1038d84eb5b4a3c0cf7bf0e50a.r2.dev" ||
+      (u.hostname === "img.youtube.com" && u.pathname.startsWith("/vi/"))
+    );
   } catch {
-    return url.startsWith("/");
+    return false;
   }
 }
 
 export default function PhotographyGallery({ photos }: { photos: PhotoItem[] }) {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
+  // The URL is the source of truth, including direct visits and Back/Forward.
+  const selectedPhotoId = useSearchParams().get("photo");
+  const closeLightbox = useCallback(() => {
+    if (window.history.state?.photographyGallery) {
+      window.history.back();
+    } else {
+      // A landing-page or shared link should close here, not leave the gallery.
+      const url = new URL(window.location.href);
+      url.searchParams.delete("photo");
+      window.history.replaceState(null, "", url);
+    }
+  }, []);
+  const searchId = useId();
+  const categoryId = useId();
+  const resultsId = useId();
+  const categories = [...new Set(photos.map((p) => p.category?.trim()).filter((c): c is string => !!c))].sort();
+  const search = query.trim().toLocaleLowerCase();
+  const visiblePhotos = photos.filter((p) =>
+    (!category || p.category?.trim() === category) &&
+    (!search || `${p.caption} ${p.category || ""}`.toLocaleLowerCase().includes(search)),
+  );
+  const filtered = !!(query || category);
+  // A shared link still resolves when the current local filters hide its photo.
+  const lightboxPhotos = visiblePhotos.some((p) => p._id === selectedPhotoId) ? visiblePhotos : photos;
+  const lightboxIndex = lightboxPhotos.findIndex((p) => p._id === selectedPhotoId);
 
-  if (photos.length === 0) {
-    return (
-      <div className="py-24 text-center">
-        <p className="text-muted">No photos yet.</p>
-      </div>
-    );
+  const openPhoto = (index: number) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("photo", visiblePhotos[index]._id);
+    window.history.pushState({ photographyGallery: true }, "", url);
+  };
+  const navigatePhoto = (index: number) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("photo", lightboxPhotos[index]._id);
+    // Next copies its internal router state itself. Passing it explicitly would
+    // bypass its URL synchronization and leave useSearchParams stale.
+    window.history.replaceState({ photographyGallery: !!window.history.state?.photographyGallery }, "", url);
+  };
+
+  if (!photos.length) {
+    return <p className={styles.empty}>No photos yet. Check back soon.</p>;
   }
 
   return (
-    <div className="space-y-12">
-      <div className="flex justify-end">
-        <div className="flex gap-2 text-sm text-muted">
-          <button
-            type="button"
-            onClick={() => setViewMode("list")}
-            className={`px-3 py-1 transition-colors ${
-              viewMode === "list" ? "text-foreground font-medium" : "hover:text-foreground"
-            }`}
-          >
-            LIST
-          </button>
-          <span className="text-border">|</span>
-          <button
-            type="button"
-            onClick={() => setViewMode("grid")}
-            className={`px-3 py-1 transition-colors ${
-              viewMode === "grid" ? "text-foreground font-medium" : "hover:text-foreground"
-            }`}
-          >
-            GRID
-          </button>
+    <section className={styles.gallery} aria-label="Photo collection">
+      <div className={styles.toolbar}>
+        <div className={styles.filters}>
+          <label className={styles.field} htmlFor={searchId}>
+            <span>Search photographs</span>
+            <input id={searchId} type="search" placeholder="Caption or category" value={query}
+              aria-controls={resultsId} onChange={(e) => setQuery(e.target.value)} />
+          </label>
+          {categories.length > 0 && (
+            <label className={styles.field} htmlFor={categoryId}>
+              <span>Category</span>
+              <select id={categoryId} value={category} aria-controls={resultsId} onChange={(e) => setCategory(e.target.value)}>
+                <option value="">All categories</option>
+                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+          )}
+        </div>
+        <div className={styles.viewToggle} role="group" aria-label="Gallery view">
+          <button type="button" aria-pressed={viewMode === "list"} onClick={() => setViewMode("list")}>List</button>
+          <button type="button" aria-pressed={viewMode === "grid"} onClick={() => setViewMode("grid")}>Grid</button>
         </div>
       </div>
-
-      <div className="relative min-h-[320px]">
-        {viewMode === "list" ? (
-          <CarouselView key="list" photos={photos} onPhotoClick={setLightboxIndex} />
+      <div className={styles.results}>
+        <p role="status" aria-live="polite" aria-atomic="true">
+          {filtered ? `${visiblePhotos.length} of ${photos.length}` : photos.length} {photos.length === 1 ? "photograph" : "photographs"}
+        </p>
+        {filtered && <button type="button" className={styles.textLink} onClick={() => { setQuery(""); setCategory(""); }}>Clear filters</button>}
+      </div>
+      <div id={resultsId}>
+        {!visiblePhotos.length ? (
+          <div className={styles.empty}><h2>No matching photographs.</h2><p>Try another caption or category, or clear the filters.</p></div>
+        ) : viewMode === "list" ? (
+          <CarouselView key={`list-${category}-${query}`} photos={visiblePhotos} onPhotoClick={openPhoto} />
         ) : (
-          <GridView key="grid" photos={photos} onPhotoClick={setLightboxIndex} />
+          <div className={styles.grid}>
+            {visiblePhotos.map((photo, index) => (
+              <PhotoCard key={photo._id} photo={photo} index={index} eager={index < EAGER_GRID_COUNT} onClick={() => openPhoto(index)} />
+            ))}
+          </div>
         )}
       </div>
-
-      {lightboxIndex !== null && (
-        <Lightbox
-          photos={photos}
-          currentIndex={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-          onNavigate={setLightboxIndex}
-        />
+      {lightboxIndex >= 0 && (
+        <Lightbox photos={lightboxPhotos} currentIndex={lightboxIndex} onClose={closeLightbox} onNavigate={navigatePhoto} />
       )}
-    </div>
+    </section>
   );
 }
 
-/* ---------- Expand overlay (hover hint) ---------- */
-
-function ExpandOverlay() {
-  return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/25 group-hover:opacity-100 pointer-events-none">
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-white drop-shadow-lg"
-      >
-        <polyline points="15 3 21 3 21 9" />
-        <polyline points="9 21 3 21 3 15" />
-        <line x1="21" y1="3" x2="14" y2="10" />
-        <line x1="3" y1="21" x2="10" y2="14" />
-      </svg>
-    </div>
-  );
-}
-
-/* ---------- Lightbox ---------- */
-
-function Lightbox({
-  photos,
-  currentIndex,
-  onClose,
-  onNavigate,
-}: {
-  photos: PhotoItem[];
-  currentIndex: number;
-  onClose: () => void;
-  onNavigate: (index: number) => void;
-}) {
-  const photo = photos[currentIndex];
-
-  const goPrev = useCallback(() => {
-    onNavigate((currentIndex - 1 + photos.length) % photos.length);
-  }, [currentIndex, photos.length, onNavigate]);
-
-  const goNext = useCallback(() => {
-    onNavigate((currentIndex + 1) % photos.length);
-  }, [currentIndex, photos.length, onNavigate]);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      else if (e.key === "ArrowLeft") goPrev();
-      else if (e.key === "ArrowRight") goNext();
-    };
-    window.addEventListener("keydown", handleKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", handleKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose, goPrev, goNext]);
-
-  // Preload adjacent images so navigation is instant
-  useEffect(() => {
-    const toPreload: number[] = [];
-    if (photos.length > 1) {
-      toPreload.push((currentIndex + 1) % photos.length);
-      toPreload.push((currentIndex - 1 + photos.length) % photos.length);
-    }
-    const links: HTMLLinkElement[] = [];
-    for (const idx of toPreload) {
-      const link = document.createElement("link");
-      link.rel = "preload";
-      link.as = "image";
-      link.href = photos[idx].image;
-      document.head.appendChild(link);
-      links.push(link);
-    }
-    return () => links.forEach((l) => l.remove());
-  }, [currentIndex, photos]);
-
-  return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={onClose}
-    >
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute top-5 right-5 z-10 text-white/70 hover:text-white transition-colors"
-        aria-label="Close"
-      >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
-
-      {photos.length > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); goPrev(); }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 text-white/50 hover:text-white transition-colors"
-            aria-label="Previous photo"
-          >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); goNext(); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 text-white/50 hover:text-white transition-colors"
-            aria-label="Next photo"
-          >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-        </>
-      )}
-
-      <div
-        className="relative flex flex-col items-center max-h-[90vh] max-w-[90vw]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="relative w-auto h-auto max-h-[80vh] max-w-[90vw]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            key={photo._id}
-            src={photo.image}
-            alt={photo.caption || "Photograph"}
-            className="object-contain max-h-[80vh] max-w-[90vw] w-auto h-auto rounded-sm"
-            draggable={false}
-          />
-        </div>
-        {photo.caption && (
-          <p className="mt-4 text-white/70 text-sm font-light italic tracking-wide text-center max-w-lg">
-            {photo.caption}
-          </p>
-        )}
-        {photos.length > 1 && (
-          <p className="mt-2 text-white/40 text-xs tabular-nums">
-            {currentIndex + 1} / {photos.length}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ---------- Carousel ---------- */
-
-function CarouselView({ photos, onPhotoClick }: { photos: PhotoItem[]; onPhotoClick: (index: number) => void }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const secondCardRef = useRef<HTMLElement | null>(null);
-  const [scrollState, setScrollState] = useState({ scrollLeft: 0, containerWidth: 0 });
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const update = () => {
-      setScrollState({ scrollLeft: el.scrollLeft, containerWidth: el.clientWidth });
-    };
-
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, []);
-
-  useEffect(() => {
-    const card = secondCardRef.current;
-    const container = scrollRef.current;
-    if (card && container && photos.length > 1) {
-      card.scrollIntoView({ behavior: "auto", block: "nearest", inline: "center" });
-    }
-  }, [photos.length]);
-
-  return (
-    <div className="relative -mx-6">
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory py-10 px-6"
-      >
-        <div
-          className="flex items-center gap-4 md:gap-6 pb-4"
-          style={{
-            minWidth: "min-content",
-            paddingLeft: "calc(50vw - min(190px, 37.5vw))",
-            paddingRight: "calc(50vw - min(190px, 37.5vw))",
-          }}
-        >
-          {photos.map((photo, index) => (
-            <CarouselCard
-              key={photo._id}
-              photo={photo}
-              index={index}
-              scrollState={scrollState}
-              scrollRef={scrollRef}
-              cardRef={index === 1 ? secondCardRef : undefined}
-              eager={index <= 2}
-              onClick={() => onPhotoClick(index)}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CarouselCard({
-  photo,
-  scrollState,
-  scrollRef,
-  cardRef: externalCardRef,
-  eager,
-  onClick,
-}: {
-  photo: PhotoItem;
-  index: number;
-  scrollState: { scrollLeft: number; containerWidth: number };
-  scrollRef: React.RefObject<HTMLDivElement | null>;
-  cardRef?: React.RefObject<HTMLElement | null>;
-  eager: boolean;
-  onClick: () => void;
-}) {
-  const internalCardRef = useRef<HTMLElement>(null);
-  const cardRef = externalCardRef ?? internalCardRef;
-  const [distanceFromCenter, setDistanceFromCenter] = useState(9999);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const card = cardRef.current;
-    const container = scrollRef.current;
-    if (!card || !container) return;
-
-    const update = () => {
-      const containerRect = container.getBoundingClientRect();
-      const cardRect = card.getBoundingClientRect();
-      const containerCenterX = containerRect.left + containerRect.width / 2;
-      const cardCenterX = cardRect.left + cardRect.width / 2;
-      setDistanceFromCenter(Math.abs(cardCenterX - containerCenterX));
-    };
-
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(container);
-    container.addEventListener("scroll", update, { passive: true });
-    return () => {
-      ro.disconnect();
-      container.removeEventListener("scroll", update);
-    };
-  }, [scrollRef, scrollState.scrollLeft, scrollState.containerWidth, cardRef]);
-
-  const maxDistance = scrollState.containerWidth * 0.55;
-  const centerFactor = Math.max(0, 1 - distanceFromCenter / maxDistance);
-  const scale = 0.82 + 0.18 * centerFactor;
-  const zIndex = Math.round(centerFactor * 100);
-
-  return (
-    <figure
-      ref={cardRef}
-      className="shrink-0 snap-center transition-transform duration-300 ease-out cursor-pointer"
-      onClick={onClick}
-      style={{
-        width: "min(380px, 75vw)",
-        maxWidth: "420px",
-        transform: `scale(${scale})`,
-        transformOrigin: "center center",
-        zIndex,
-      }}
-    >
-      <div className="group relative aspect-[4/5] w-full min-h-0 overflow-hidden rounded-sm bg-card">
-        <Image
-          src={photo.image}
-          alt={photo.caption || "Photograph"}
-          fill
-          sizes="(max-width: 506px) 75vw, 380px"
-          className={`object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-          onLoad={() => setLoaded(true)}
-          priority={eager}
-          unoptimized={!isOptimizable(photo.image)}
-        />
-        <ExpandOverlay />
-      </div>
-      {photo.caption && (
-        <figcaption className="mt-3 text-center">
-          <p className="text-muted text-sm font-light italic tracking-wide line-clamp-2">
-            {photo.caption}
-          </p>
-        </figcaption>
-      )}
-    </figure>
-  );
-}
-
-/* ---------- Grid with occlusion culling ---------- */
-
-function GridView({ photos, onPhotoClick }: { photos: PhotoItem[]; onPhotoClick: (index: number) => void }) {
-  return (
-    <div
-      className="grid gap-4 sm:gap-6 md:gap-8"
-      style={{
-        gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))",
-      }}
-    >
-      {photos.map((photo, index) => (
-        <LazyGridCard key={photo._id} photo={photo} eager={index < EAGER_GRID_COUNT} onClick={() => onPhotoClick(index)} />
-      ))}
-    </div>
-  );
-}
-
-function LazyGridCard({ photo, eager, onClick }: { photo: PhotoItem; eager: boolean; onClick: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
+function PhotoCard({ photo, index, eager, onClick }: { photo: PhotoItem; index: number; eager: boolean; onClick: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
   const [visible, setVisible] = useState(eager);
-  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (eager) return;
     const el = ref.current;
     if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "300px" },
-    );
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "300px" });
     observer.observe(el);
     return () => observer.disconnect();
   }, [eager]);
 
   return (
-    <figure className="cursor-pointer" onClick={onClick}>
-      <div ref={ref} className="group relative aspect-[4/5] min-h-0 overflow-hidden rounded-sm bg-card">
-        {visible && (
-          <Image
-            src={photo.image}
-            alt={photo.caption || "Photograph"}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className={`object-cover object-center transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-            onLoad={() => setLoaded(true)}
-            priority={eager}
-            unoptimized={!isOptimizable(photo.image)}
-          />
-        )}
-        <ExpandOverlay />
-      </div>
-      {photo.caption && (
-        <figcaption className="mt-3">
-          <p className="text-muted text-sm font-light italic tracking-wide line-clamp-2">
-            {photo.caption}
-          </p>
-        </figcaption>
-      )}
+    <figure className={styles.photo}>
+      <button ref={ref} type="button" className={styles.photoButton} onClick={onClick}
+        aria-label={`Open photograph ${index + 1}${photo.caption ? `: ${photo.caption}` : ""}`} aria-haspopup="dialog">
+        {(visible || eager) && !failed && <Image src={photo.image} alt={photo.caption || `Photograph ${index + 1}`} fill
+          sizes="(max-width: 600px) 90vw, (max-width: 1000px) 45vw, 420px"
+          className={styles.thumbnail} priority={eager} unoptimized={!isOptimizable(photo.image)} onError={() => setFailed(true)} />}
+        {failed && <span className={styles.imageError}>Preview unavailable. Open photograph.</span>}
+        <span className={styles.expand} aria-hidden="true">View photograph <span>↗</span></span>
+      </button>
+      {(photo.caption || photo.category) && <figcaption className={styles.caption}>
+        {photo.caption && <p>{photo.caption}</p>}
+        {photo.category && <span>{photo.category}</span>}
+      </figcaption>}
     </figure>
+  );
+}
+
+function CarouselView({ photos, onPhotoClick }: { photos: PhotoItem[]; onPhotoClick: (index: number) => void }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ atStart: true, atEnd: false });
+  const carouselId = useId();
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => setPosition({ atStart: el.scrollLeft <= 2, atEnd: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2 });
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    el.addEventListener("scroll", update, { passive: true });
+    return () => { observer.disconnect(); el.removeEventListener("scroll", update); };
+  }, []);
+
+  const scroll = (direction: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const card = el.firstElementChild as HTMLElement | null;
+    const distance = card ? card.offsetWidth + parseFloat(getComputedStyle(el).columnGap || "0") : el.clientWidth;
+    el.scrollBy({ left: direction * distance, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  };
+
+  return (
+    <div>
+      <div className={styles.carouselControls}>
+        <p>Scroll to explore. Select a photograph to open it.</p>
+        <div role="group" aria-label="Scroll photographs">
+          <button type="button" className={styles.iconButton} aria-label="Scroll to previous photographs" aria-controls={carouselId} disabled={position.atStart} onClick={() => scroll(-1)}>←</button>
+          <button type="button" className={styles.iconButton} aria-label="Scroll to next photographs" aria-controls={carouselId} disabled={position.atEnd} onClick={() => scroll(1)}>→</button>
+        </div>
+      </div>
+      <div id={carouselId} ref={scrollRef} className={styles.carousel} role="region" aria-label="Photographs in a horizontal list" tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); scroll(e.key === "ArrowLeft" ? -1 : 1); }
+        }}>
+        {photos.map((photo, index) => <PhotoCard key={photo._id} photo={photo} index={index} eager={index < 3} onClick={() => onPhotoClick(index)} />)}
+      </div>
+    </div>
+  );
+}
+
+function Lightbox({ photos, currentIndex, onClose, onNavigate }: {
+  photos: PhotoItem[]; currentIndex: number; onClose: () => void; onNavigate: (index: number) => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const photo = photos[currentIndex];
+  const goPrev = () => onNavigate((currentIndex - 1 + photos.length) % photos.length);
+  const goNext = () => onNavigate((currentIndex + 1) % photos.length);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    dialog?.showModal();
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = previousOverflow;
+      opener?.focus({ preventScroll: true });
+    };
+  }, []);
+
+  useEffect(() => {
+    if (photos.length < 2) return;
+    const adjacent = new Set([(currentIndex + 1) % photos.length, (currentIndex - 1 + photos.length) % photos.length]);
+    const links = [...adjacent].map((index) => {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
+      link.href = photos[index].image;
+      document.head.appendChild(link);
+      return link;
+    });
+    return () => links.forEach((link) => link.remove());
+  }, [currentIndex, photos]);
+
+  return (
+    <dialog ref={dialogRef} className={styles.lightbox} aria-labelledby={titleId}
+      onCancel={(e) => { e.preventDefault(); onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onKeyDown={(e) => {
+        if (e.key === "Tab") {
+          const controls = e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex="0"]');
+          const first = controls[0];
+          const last = controls[controls.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+          return;
+        }
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+        if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); }
+        if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
+      }}>
+      <div className={styles.lightboxBar}>
+        <p id={titleId}>Photograph {currentIndex + 1} of {photos.length}</p>
+        <button type="button" className={styles.closeButton} onClick={onClose} autoFocus>Close <span aria-hidden="true">×</span></button>
+      </div>
+      <div className={styles.lightboxStage} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <OriginalPhoto key={photo._id} photo={photo} />
+      </div>
+      <div className={styles.lightboxFooter}>
+        <div className={styles.lightboxCaption} aria-live="polite" aria-atomic="true">
+          <p>{photo.caption || `Photograph ${currentIndex + 1}`}</p>
+          {photo.category && <span>{photo.category}</span>}
+          <SharePhotoLink key={photo._id} />
+          <a href={photo.image} target="_blank" rel="noopener noreferrer" className={styles.textLink}>Open full-resolution image <span className={styles.srOnly}>(opens in a new tab)</span></a>
+        </div>
+        {photos.length > 1 && <div className={styles.lightboxNavigation} role="group" aria-label="Photo navigation">
+          <button type="button" className={styles.iconButton} aria-label="Previous photo" onClick={goPrev}>←</button>
+          <span aria-hidden="true">{currentIndex + 1} / {photos.length}</span>
+          <button type="button" className={styles.iconButton} aria-label="Next photo" onClick={goNext}>→</button>
+        </div>}
+      </div>
+    </dialog>
+  );
+}
+
+function OriginalPhoto({ photo }: { photo: PhotoItem }) {
+  const [failed, setFailed] = useState(false);
+  return failed ? <p className={styles.imageError} role="status">This photograph could not load. Try opening the full-resolution image below.</p> : (
+    // The lightbox deliberately loads the original, without Next image resizing.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={photo.image} alt={photo.caption || "Photograph"} className={styles.original} draggable={false} onError={() => setFailed(true)} />
+  );
+}
+
+function SharePhotoLink() {
+  const [status, setStatus] = useState("");
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setStatus("Photo link copied.");
+    } catch {
+      setStatus("Copy the address from your browser to share this photograph.");
+    }
+  };
+
+  return (
+    <div>
+      <button type="button" className={styles.textLink} onClick={copyLink}>Copy photo link</button>
+      <span className={styles.shareStatus} role="status">{status}</span>
+    </div>
   );
 }

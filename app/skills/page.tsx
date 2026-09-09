@@ -23,7 +23,7 @@ export default async function SkillsPage() {
   return (
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "Skills", url: "/skills" }]} />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+      <div className="page-shell public-info">
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-12">Skills</h1>
 
         {Object.keys(byCategory).length === 0 ? (

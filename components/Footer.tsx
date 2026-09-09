@@ -1,17 +1,4 @@
-export default function Footer() {
-  return (
-    <footer className="relative z-10 border-t border-border mt-16 sm:mt-24 bg-background shrink-0">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col md:flex-row items-center justify-between gap-4">
-        <p className="text-muted text-sm">© {new Date().getFullYear()} Kathan Desai. Founder of bugbase.</p>
-        <div className="flex gap-6">
-          <a href="https://x.com/kathandesai3009" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-accent text-sm transition-colors">X</a>
-          <a href="https://github.com/kathan3009" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-accent text-sm transition-colors">GitHub</a>
-          <a href="https://www.linkedin.com/in/kathandesai1/" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-accent text-sm transition-colors">LinkedIn</a>
-        </div>
-      </div>
-      <p className="text-center text-muted/40 text-[10px] tracking-widest uppercase pb-4 select-none">
-        type the magic word to see inside
-      </p>
-    </footer>
-  );
-}
+import Link from 'next/link';
+import MotionPreference from './MotionPreference';
+import SpideyToggle from './spidey/SpideyToggle';
+export default function Footer(){return <footer className="portfolio-footer"><div className="footer-first"><Link className="site-wordmark" href="/">Kathan Desai</Link><div className="footer-social"><a href="https://github.com/kathan3009" target="_blank" rel="noreferrer">GitHub</a><a href="https://www.linkedin.com/in/kathandesai1/" target="_blank" rel="noreferrer">LinkedIn</a><a href="https://x.com/kathandesai3009" target="_blank" rel="noreferrer">X</a><a href="mailto:kathan@bugbase.ai">Say hello</a></div></div><nav aria-label="More about Kathan" className="footer-pages">{[['/work','Work'],['/skills','Skills'],['/certifications','Certifications'],['/faq','FAQ'],['/now','Now']].map(([href,label])=><Link key={href} href={href}>{label}</Link>)}</nav><div className="footer-last"><span>© {new Date().getFullYear()} Kathan Desai</span><div><MotionPreference/><SpideyToggle/></div></div></footer>;}

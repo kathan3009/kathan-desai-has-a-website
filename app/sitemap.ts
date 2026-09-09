@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
+import Project from "@/models/Project";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/blogs",
     "/certifications",
     "/photography",
+    "/now",
   ].map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date(),
@@ -29,6 +31,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const conn = await dbConnect();
     if (conn) {
       const posts = await Blog.find().select("slug updatedAt");
+      const projects=await Project.find().select("updatedAt");
+      staticPages.push(...projects.map(p=>({url:`${baseUrl}/projects/${p._id}`,lastModified:new Date(p.updatedAt),changeFrequency:"monthly" as const,priority:0.7})));
       blogUrls = posts.map((p) => ({
         url: `${baseUrl}/blogs/${p.slug}`,
         lastModified: new Date(p.updatedAt || p),

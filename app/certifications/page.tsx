@@ -16,7 +16,7 @@ export default async function CertificationsPage() {
   return (
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "Certifications", url: "/certifications" }]} />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+      <div className="page-shell public-info">
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-12">Certifications</h1>
         <div className="space-y-6">
           {items.length === 0 ? (

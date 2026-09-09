@@ -14,7 +14,7 @@ const variantConfig: Record<
   "blog-banner": { aspect: "", fit: "cover", padding: "", size: "w-full h-full" },
   "blog-thumbnail": { aspect: "aspect-[3/2]", fit: "contain", size: "w-24 h-16 shrink-0", padding: "p-1" },
   "blog-card": { aspect: "aspect-[8/5]", fit: "contain", size: "w-32 h-20 shrink-0", padding: "p-1" },
-  "blog-hero": { aspect: "aspect-[21/9]", fit: "cover", padding: "" },
+  "blog-hero": { aspect: "aspect-video", fit: "cover", padding: "" },
 };
 
 const variantSizes: Record<MediaVariant, string> = {
@@ -46,24 +46,26 @@ type MediaBlockProps = {
   prioritizeVideo?: boolean;
 };
 
-function normalizeVideoEmbed(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return "";
-  const ytEmbed = trimmed.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
-  const ytWatch = trimmed.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
-  const ytShort = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
-  const vidId = ytEmbed?.[1] ?? ytWatch?.[1] ?? ytShort?.[1];
-  if (vidId) {
-    return `<iframe src="https://www.youtube.com/embed/${vidId}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-  }
-  if (trimmed.startsWith("<iframe")) {
-    const srcMatch = trimmed.match(/src=["']([^"']+)["']/);
-    const src = srcMatch?.[1] ?? "";
-    if (src.includes("youtube.com/embed/") || src.includes("youtube-nocookie.com/embed/")) {
-      return trimmed;
+function canonicalVideoURL(raw: string): string {
+  const id = extractYoutubeId(raw);
+  return id && /^[a-zA-Z0-9_-]{11}$/.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : '';
+}
+
+function directVideoURL(raw?: string): string {
+  if (!raw) return "";
+  const value = raw.trim();
+  if (!value) return "";
+  try {
+    const url = new URL(value, "https://portfolio.local");
+    if (!["http:", "https:"].includes(url.protocol)) return "";
+    if (!/\.(mp4|webm|mov)$/i.test(url.pathname)) return "";
+    if (url.hostname === "portfolio.local") {
+      return value.startsWith("/") && !value.startsWith("//") ? value : "";
     }
+    return url.href;
+  } catch {
+    return "";
   }
-  return "";
 }
 
 export function MediaBlock({
@@ -78,19 +80,16 @@ export function MediaBlock({
 }: MediaBlockProps) {
   const [loaded, setLoaded] = useState(false);
   const youtubeThumbnail = getYoutubeThumbnailUrl(videoEmbed, content);
-  const hasVideo = !!(videoEmbed?.trim() || youtubeThumbnail);
+  const directVideo = directVideoURL(videoEmbed);
+  const hasVideo = !!(directVideo || videoEmbed?.trim() || youtubeThumbnail);
   if (!image && !videoEmbed && !youtubeThumbnail) return null;
 
   const { aspect, fit, size, padding } = variantConfig[variant];
   const objectFit = fit === "contain" ? "object-contain" : "object-cover";
   const sizes = variantSizes[variant];
   const vidIdFromContent = extractYoutubeId(content ?? "");
-  const embedHtml =
-    videoEmbed
-      ? normalizeVideoEmbed(videoEmbed)
-      : vidIdFromContent
-        ? `<iframe src="https://www.youtube.com/embed/${vidIdFromContent}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
-        : "";
+  const embedURL = canonicalVideoURL(videoEmbed || '') ||
+    (vidIdFromContent && /^[a-zA-Z0-9_-]{11}$/.test(vidIdFromContent) ? `https://www.youtube-nocookie.com/embed/${vidIdFromContent}` : '');
 
   const isProjectCard = variant === "project-card";
   const isBlogBanner = variant === "blog-banner";
@@ -100,8 +99,9 @@ export function MediaBlock({
     (variant === "blog-banner" || variant === "project-card" || variant === "blog-card" || variant === "blog-thumbnail");
 
   const showVideo = hasVideo && (prioritizeVideo || !image);
-  const showIframe = embedHtml && variant === "blog-hero" && showVideo;
-  const showImage = image && (!prioritizeVideo || !hasVideo);
+  const showDirectVideo = directVideo && variant === "blog-hero" && showVideo;
+  const showIframe = !showDirectVideo && embedURL && variant === "blog-hero" && showVideo;
+  const showImage = image && (!prioritizeVideo || !hasVideo || (!!directVideo && variant !== "blog-hero"));
   const showThumbnail = hasVideo && showThumbnailForVideo && (prioritizeVideo || !image);
   const showImg = showImage || showThumbnail;
   const imgSrc = showImage ? image : showThumbnail ? youtubeThumbnail : null;
@@ -115,10 +115,24 @@ export function MediaBlock({
         ${className}
       `}
     >
-      {showIframe ? (
-        <div
-          className="absolute inset-0 [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:w-full [&>iframe]:h-full"
-          dangerouslySetInnerHTML={{ __html: embedHtml }}
+      {showDirectVideo ? (
+        <video
+          className="absolute inset-0 h-full w-full bg-black object-cover"
+          src={directVideo}
+          poster={image}
+          controls
+          playsInline
+          preload="metadata"
+          aria-label={alt ? `Video: ${alt}` : "Article video"}
+        />
+      ) : showIframe ? (
+        <iframe
+          className="absolute inset-0 w-full h-full"
+          src={embedURL}
+          title={alt ? `Video: ${alt}` : 'YouTube video'}
+          allow="encrypted-media; picture-in-picture; fullscreen"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
         />
       ) : showImg && imgSrc ? (
         <>

@@ -1,6 +1,7 @@
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
+import { validateFile, validateUploadSubdir, UploadError } from "./r2";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
@@ -12,31 +13,21 @@ const ALLOWED_MIMES = [
   "image/webp",
   "image/avif",
 ];
-const MAX_BYTES = 5 * 1024 * 1024; // 5MB
-
-function sanitizeSubdir(subdir: string | undefined): string | undefined {
-  if (!subdir?.trim()) return undefined;
-  const cleaned = subdir.replace(/\.\./g, "").replace(/^\/+|\/+$/g, "").trim();
-  if (!cleaned) return undefined;
-  return cleaned;
-}
-
 export async function saveUpload(
   file: File,
   subdir?: string
 ): Promise<string> {
   const mime = file.type?.toLowerCase();
   if (!ALLOWED_MIMES.includes(mime)) {
-    throw new Error("Invalid file type. Allowed: JPEG, PNG, GIF, WebP, AVIF.");
+    throw new UploadError("Invalid file type. Allowed: JPEG, PNG, GIF, WebP, AVIF.");
   }
-  if (file.size > MAX_BYTES) {
-    throw new Error("File too large. Max size: 5MB.");
-  }
+  const validation = validateFile(file);
+  if (!validation.ok) throw new UploadError(validation.error);
 
-  const safeSubdir = sanitizeSubdir(subdir);
+  const safeSubdir = validateUploadSubdir(subdir);
   const dir = safeSubdir ? path.join(UPLOAD_DIR, safeSubdir) : UPLOAD_DIR;
   const resolvedDir = path.resolve(dir);
-  if (!resolvedDir.startsWith(path.resolve(UPLOAD_DIR))) {
+  if (resolvedDir !== path.resolve(UPLOAD_DIR) && !resolvedDir.startsWith(path.resolve(UPLOAD_DIR) + path.sep)) {
     throw new Error("Invalid upload path.");
   }
   await mkdir(resolvedDir, { recursive: true });

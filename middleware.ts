@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ADMIN_COOKIE, verifyAdminSession } from "./lib/adminSession";
 
 const ADMIN_PATH = process.env.NEXT_PUBLIC_ADMIN_PATH || "admin";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const adminPrefix = `/${ADMIN_PATH}`;
 
@@ -22,8 +23,8 @@ export function middleware(request: NextRequest) {
   // Path matches env - allow with auth check
   const isLoginPage = path === `${adminPrefix}/login`;
   if (!isLoginPage) {
-    const auth = request.cookies.get("admin-auth")?.value;
-    if (auth !== "authenticated") {
+    const auth = request.cookies.get(ADMIN_COOKIE)?.value;
+    if (!(await verifyAdminSession(auth))) {
       return NextResponse.redirect(new URL(`${adminPrefix}/login`, request.url));
     }
   }

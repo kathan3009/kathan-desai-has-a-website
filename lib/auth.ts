@@ -1,39 +1,54 @@
 import { cookies } from "next/headers";
+import { createHash, timingSafeEqual } from "node:crypto";
+import {
+  ADMIN_COOKIE,
+  ADMIN_SESSION_MAX_AGE,
+  createAdminSession,
+  getAdminCredentials,
+  isValidCredential,
+  verifyAdminSession,
+} from "./adminSession";
 
-const ADMIN_COOKIE = "admin-auth";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+export { getAdminCredentials } from "./adminSession";
 
-export function getAdminCredentials(): { username: string; password: string } | null {
-  const username = process.env.ADMIN_USERNAME;
-  const password = process.env.ADMIN_PASSWORD;
-  if (!username || !password) return null;
-  return { username, password };
-}
-
-export async function verifyAdmin(username: string, password: string): Promise<boolean> {
+export async function verifyAdmin(username: unknown, password: unknown): Promise<boolean> {
+  if (!isValidCredential(username) || !isValidCredential(password)) return false;
   const creds = getAdminCredentials();
   if (!creds) return false;
-  return username === creds.username && password === creds.password;
+  const digest = (value: string) => createHash("sha256").update(value, "utf8").digest();
+  // Compare fixed-size hashes, evaluating both comparisons without short-circuiting.
+  const usernameMatches = timingSafeEqual(digest(username), digest(creds.username));
+  const passwordMatches = timingSafeEqual(digest(password), digest(creds.password));
+  return usernameMatches && passwordMatches;
 }
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+};
+
 export async function setAdminSession(): Promise<void> {
+  const session = await createAdminSession();
   const cookieStore = await cookies();
-  cookieStore.set(ADMIN_COOKIE, "authenticated", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: COOKIE_MAX_AGE,
-    path: "/",
+  cookieStore.set(ADMIN_COOKIE, session, {
+    ...cookieOptions,
+    maxAge: ADMIN_SESSION_MAX_AGE,
   });
 }
 
 export async function clearAdminSession(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete(ADMIN_COOKIE);
+  cookieStore.set(ADMIN_COOKIE, "", {
+    ...cookieOptions,
+    maxAge: 0,
+    expires: new Date(0),
+  });
 }
 
 export async function isAdminAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
   const value = cookieStore.get(ADMIN_COOKIE)?.value;
-  return value === "authenticated";
+  return verifyAdminSession(value);
 }

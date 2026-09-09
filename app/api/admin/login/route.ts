@@ -1,20 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { verifyAdmin, setAdminSession } from "@/lib/auth";
+import { isValidCredential } from "@/lib/adminSession";
+import {
+  adminJson, AdminRequestError, readAdminJson, requireAdminOrigin, withAdminErrors,
+} from "@/lib/adminRequest";
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { username, password } = body;
-    if (!username || !password) {
-      return NextResponse.json({ error: "Missing credentials" }, { status: 400 });
+  return withAdminErrors(async () => {
+    requireAdminOrigin(request);
+    const { username, password } = await readAdminJson(request);
+    if (!isValidCredential(username) || !isValidCredential(password)) {
+      throw new AdminRequestError(400, "Missing or malformed credentials");
     }
-    const valid = await verifyAdmin(username, password);
-    if (!valid) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    if (!(await verifyAdmin(username, password))) {
+      throw new AdminRequestError(401, "Invalid credentials");
     }
     await setAdminSession();
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
-  }
+    return adminJson({ success: true });
+  });
 }

@@ -1,0 +1,14 @@
+.git
+.agents
+.env*
+brag-output*
+output
+tmp
+scripts/project-assets
+node_modules
+.next
+test-results
+playwright-report
+tests
+screenshots
+*.tsbuildinfo

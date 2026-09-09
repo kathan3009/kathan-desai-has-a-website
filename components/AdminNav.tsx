@@ -2,43 +2,36 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { ADMIN_PATH } from "@/lib/adminPath";
+import { adminRequest, errorMessage } from "@/components/admin/api";
 
-const adminBase = `/${ADMIN_PATH}`;
+const base = `/${ADMIN_PATH}`;
+const sections = [["", "Overview"], ["blog", "Writing"], ["projects", "Projects"], ["photos", "Photographs"], ["about", "About"], ["work", "Work"], ["skills", "Skills"], ["certifications", "Certifications"], ["faq", "FAQ"], ["uploads", "Uploads"]];
 
 export default function AdminNav() {
   const pathname = usePathname();
   const router = useRouter();
-  if (pathname === `${adminBase}/login`) return null;
-
-  async function handleLogout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push(`${adminBase}/login`);
-    router.refresh();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const locked = useRef(false);
+  if (pathname === `${base}/login` || pathname === "/admin/login") return null;
+  async function logout() {
+    if (locked.current || !window.dispatchEvent(new Event("admin:before-leave", { cancelable: true }))) return;
+    locked.current = true; setPending(true); setError("");
+    try {
+      await adminRequest("/api/admin/logout", { method: "POST" });
+      router.push(`${base}/login`); router.refresh();
+    } catch (error) { setError(errorMessage(error)); }
+    finally { locked.current = false; setPending(false); }
   }
-
-  return (
-    <nav className="border-b border-border px-6 py-4 flex items-center justify-between">
-      <div className="flex gap-6">
-        <Link href={adminBase} className="text-foreground font-medium hover:text-accent transition-colors">
-          Dashboard
-        </Link>
-        <Link href={`${adminBase}/about`} className="text-muted hover:text-accent transition-colors">About</Link>
-        <Link href={`${adminBase}/work`} className="text-muted hover:text-accent transition-colors">Work</Link>
-        <Link href={`${adminBase}/projects`} className="text-muted hover:text-accent transition-colors">Projects</Link>
-        <Link href={`${adminBase}/skills`} className="text-muted hover:text-accent transition-colors">Skills</Link>
-        <Link href={`${adminBase}/blog`} className="text-muted hover:text-accent transition-colors">Blogs</Link>
-        <Link href={`${adminBase}/certifications`} className="text-muted hover:text-accent transition-colors">Certs</Link>
-        <Link href={`${adminBase}/faq`} className="text-muted hover:text-accent transition-colors">FAQ</Link>
-        <Link href={`${adminBase}/photos`} className="text-muted hover:text-accent transition-colors">Photos</Link>
-        <Link href={`${adminBase}/uploads`} className="text-muted hover:text-accent transition-colors">Uploads</Link>
-      </div>
-      <div className="flex gap-4">
-        <Link href="/" className="text-muted hover:text-accent text-sm transition-colors">View Site</Link>
-        <button onClick={handleLogout} className="text-muted hover:text-accent text-sm transition-colors">
-          Logout
-        </button>
-      </div>
-    </nav>
-  );
+  return <aside className="admin-sidebar">
+    <Link href={base} className="admin-brand">Studio<span>kathandesai.com</span></Link>
+    <nav aria-label="Studio sections">{sections.map(([path, label]) => {
+      const href = `${base}${path ? `/${path}` : ""}`;
+      const active = pathname === href || pathname === `/admin${path ? `/${path}` : ""}`;
+      return <Link key={path} href={href} aria-current={active ? "page" : undefined}>{label}</Link>;
+    })}</nav>
+    <div className="admin-sidebar-footer"><p>Website content</p><small>Saved changes update your site.</small><Link href="/" target="_blank" rel="noopener noreferrer">View site ↗</Link><button onClick={logout} disabled={pending}>{pending ? "Signing out…" : "Sign out"}</button>{error && <p role="alert" className="admin-error">{error}</p>}</div>
+  </aside>;
 }

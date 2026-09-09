@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/auth";
+import type { NextRequest } from "next/server";
+import {
+  adminErrorResponse, adminJson, AdminRequestError, parseAdminId, requireAdminAuthentication,
+  requireAdminDatabase, requireAdminOrigin, withAdminErrors,
+} from "@/lib/adminRequest";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
 import { uploadBufferToR2 } from "@/lib/r2";
@@ -63,46 +66,38 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await isAdminAuthenticated();
-  if (!auth) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  return withAdminErrors(async () => {
+    requireAdminOrigin(_request);
+    await requireAdminAuthentication();
+    const id = parseAdminId((await params).id);
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY not configured" },
-      { status: 503 }
-    );
-  }
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new AdminRequestError(503, "Audio generation is not configured.");
+    }
 
-  await dbConnect();
-  const { id } = await params;
-  const blog = await Blog.findById(id);
-  if (!blog) {
-    return NextResponse.json({ error: "Blog not found" }, { status: 404 });
-  }
+    requireAdminDatabase(await dbConnect());
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      throw new AdminRequestError(404, "Blog not found");
+    }
 
-  const plainText = stripMarkdown(blog.content);
-  const title = (blog.title as string) || "this article";
-  const excerpt = (blog.excerpt as string) || plainText.slice(0, 160);
+    const plainText = stripMarkdown(blog.content);
+    const title = (blog.title as string) || "this article";
 
-  if (plainText.length === 0) {
-    return NextResponse.json(
-      { error: "Blog has no content to convert" },
-      { status: 400 }
-    );
-  }
+    if (plainText.length === 0) {
+      throw new AdminRequestError(400, "Blog has no content to convert");
+    }
 
-  try {
-    const openai = new OpenAI({ apiKey });
+    try {
+      const openai = new OpenAI({ apiKey });
 
-    const scriptResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `You create podcast scripts that sound like real human conversation. Format EXACTLY:
+      const scriptResponse = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You create podcast scripts that sound like real human conversation. Format EXACTLY:
 HOST: [host's line]
 GUEST: [guest's line]
 HOST: [host's line]
@@ -120,10 +115,10 @@ Make it feel HUMAN and CONVERSATIONAL:
 - Host: warm, curious, asks real questions. Guest: casual SFO vibe, confident but chill, explains like he's at a coffee shop.
 - Refer to it as a blog we're discussing. Cover the key ideas through natural dialogue.
 - Each HOST or GUEST line must be under 3500 characters.`,
-        },
-        {
-          role: "user",
-          content: `We're doing a podcast about a blog post titled "${title}". Here's the content:
+          },
+          {
+            role: "user",
+            content: `We're doing a podcast about a blog post titled "${title}". Here's the content:
 
 ---
 ${plainText}
@@ -136,64 +131,63 @@ INTRO: Hook them immediately - a question, a bold take, or something that makes 
 BODY: Back-and-forth. Short reactions. Real questions. "Wait really?" "So what does that actually mean?" Let the guest explain, but the host should push back, get curious, react. It should feel like discovery, not a presentation.
 
 OUTRO: Brief. Natural sign-off. Maybe a takeaway or "that was good, thanks for breaking it down."`,
-        },
-      ],
-      temperature: 0.85,
-    });
+          },
+        ],
+        temperature: 0.85,
+      });
 
-    const scriptText = scriptResponse.choices[0]?.message?.content?.trim();
-    if (!scriptText) {
-      throw new Error("GPT did not return a podcast script");
-    }
-
-    const parsed = parsePodcastScript(scriptText);
-    if (parsed.length === 0) {
-      throw new Error("Could not parse podcast script. Expected HOST: and GUEST: lines.");
-    }
-
-    const ttsSegments: Array<{ voice: "nova" | "echo"; input: string; instructions: string }> = [];
-    const hostInstructions = "Speak in a warm, conversational tone like a friendly podcast host. Natural and engaging.";
-    const guestInstructions = "Speak in a casual, confident tone like someone from San Francisco - laid-back but sharp, tech-savvy, approachable.";
-
-    for (const { speaker, text } of parsed) {
-      const chunks = chunkForTTS(text, TTS_MAX_CHARS);
-      for (const chunk of chunks) {
-        ttsSegments.push({
-          voice: speaker === "host" ? "nova" : "echo",
-          input: chunk,
-          instructions: speaker === "host" ? hostInstructions : guestInstructions,
-        });
+      const scriptText = scriptResponse.choices[0]?.message?.content?.trim();
+      if (!scriptText) {
+        throw new Error("GPT did not return a podcast script");
       }
+
+      const parsed = parsePodcastScript(scriptText);
+      if (parsed.length === 0) {
+        throw new Error("Could not parse podcast script. Expected HOST: and GUEST: lines.");
+      }
+
+      const ttsSegments: Array<{ voice: "nova" | "echo"; input: string; instructions: string }> = [];
+      const hostInstructions = "Speak in a warm, conversational tone like a friendly podcast host. Natural and engaging.";
+      const guestInstructions = "Speak in a casual, confident tone like someone from San Francisco - laid-back but sharp, tech-savvy, approachable.";
+
+      for (const { speaker, text } of parsed) {
+        const chunks = chunkForTTS(text, TTS_MAX_CHARS);
+        for (const chunk of chunks) {
+          ttsSegments.push({
+            voice: speaker === "host" ? "nova" : "echo",
+            input: chunk,
+            instructions: speaker === "host" ? hostInstructions : guestInstructions,
+          });
+        }
+      }
+
+      const segmentsRes = await Promise.all(
+        ttsSegments.map((s) =>
+          openai.audio.speech.create({
+            model: "gpt-4o-mini-tts",
+            voice: s.voice,
+            input: s.input,
+            response_format: "mp3",
+            instructions: s.instructions,
+          })
+        )
+      );
+
+      const buffers = await Promise.all(
+        segmentsRes.map((r) => r.arrayBuffer().then((ab) => Buffer.from(ab)))
+      );
+      const combined = Buffer.concat(buffers);
+
+      const slug = (blog.slug as string).replace(/[^a-z0-9-_]/gi, "-");
+      const key = `blog-audio/${slug}.mp3`;
+
+      const audioUrl = await uploadBufferToR2(combined, "audio/mpeg", key);
+
+      await Blog.findByIdAndUpdate(id, { audioUrl });
+
+      return adminJson({ audioUrl });
+    } catch (err) {
+      return adminErrorResponse(err);
     }
-
-    const segmentsRes = await Promise.all(
-      ttsSegments.map((s) =>
-        openai.audio.speech.create({
-          model: "gpt-4o-mini-tts",
-          voice: s.voice,
-          input: s.input,
-          response_format: "mp3",
-          instructions: s.instructions,
-        })
-      )
-    );
-
-    const buffers = await Promise.all(
-      segmentsRes.map((r) => r.arrayBuffer().then((ab) => Buffer.from(ab)))
-    );
-    const combined = Buffer.concat(buffers);
-
-    const slug = (blog.slug as string).replace(/[^a-z0-9-_]/gi, "-");
-    const key = `blog-audio/${slug}.mp3`;
-
-    const audioUrl = await uploadBufferToR2(combined, "audio/mpeg", key);
-
-    await Blog.findByIdAndUpdate(id, { audioUrl });
-
-    return NextResponse.json({ audioUrl });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Audio generation failed";
-    const status = message.includes("API") ? 503 : 500;
-    return NextResponse.json({ error: message }, { status });
-  }
+  });
 }

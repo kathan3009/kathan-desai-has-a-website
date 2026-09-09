@@ -1,35 +1,19 @@
 import type { Metadata } from "next";
-import { DM_Sans, Geist_Mono, Archivo_Black } from "next/font/google";
+import '@fontsource/manrope/latin-400.css';
+import '@fontsource/archivo-black/latin-400.css';
+import '@fontsource/manrope/latin-500.css';
+import '@fontsource/manrope/latin-600.css';
+import '@fontsource/newsreader/latin-400.css';
+import '@fontsource/newsreader/latin-500.css';
 import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import KonamiTerminal from "@/components/KonamiTerminal";
-import DotGrid from "@/components/DotGrid";
-import CursorTrail from "@/components/CursorTrail";
 import SpideyProvider from "@/components/spidey/SpideyProvider";
 import SpideyLayers from "@/components/spidey/SpideyLayers";
 import { PersonSchema } from "@/components/schema/Person";
 import { OrganizationSchema } from "@/components/schema/Organization";
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Display face for web-slinger mode only — never render-blocking for the default site.
-const archivoBlack = Archivo_Black({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-  preload: false,
-});
 
 // Restores the mode before first paint so there is no flash of the beige theme.
 const SPIDEY_INIT = `try{if(localStorage.getItem("web-slinger-mode")==="on"){document.documentElement.dataset.theme="spidey"}}catch(e){}`;
@@ -39,11 +23,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kathandesai.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Kathan Desai | Founder of bugbase",
+    default: "Kathan Desai — Builder, BugBase co-founder",
     template: "Kathan Desai | %s",
   },
   description:
-    "Kathan Desai is the Founder of bugbase, a platform for bug bounty and security research. Explore my work, projects, and insights.",
+    "Kathan Desai co-founded BugBase and builds AI for security. Projects, writing, and photographs from San Francisco and New Delhi.",
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -62,7 +46,7 @@ export default function RootLayout({
     <ViewTransitions>
       <html
         lang="en"
-        className={`${geistMono.variable} ${archivoBlack.variable}`}
+
         suppressHydrationWarning
       >
         <head>
@@ -74,13 +58,12 @@ export default function RootLayout({
           <PersonSchema />
           <OrganizationSchema />
         </head>
-        <body className={`${dmSans.className} antialiased min-h-screen flex flex-col`}>
+        <body className="antialiased min-h-screen flex flex-col">
           <SpideyProvider>
-            <DotGrid />
-            <CursorTrail />
             <SpideyLayers />
+            <a href="#main-content" className="skip-link">Skip to content</a>
             <Header />
-            <main className="flex-1 min-h-0">{children}</main>
+            <main id="main-content" className="flex-1 min-h-0" tabIndex={-1}>{children}</main>
             <Footer />
             <KonamiTerminal />
           </SpideyProvider>

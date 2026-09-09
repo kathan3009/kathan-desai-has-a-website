@@ -1,54 +1,57 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useId, useRef, useState } from "react";
+import { ReadingThemeContext } from "./reading/ReaderShell";
+import styles from "./reading/reading.module.css";
 
-type Props = { code: string };
+// Mermaid's configuration is global: serialize configuration + rendering so
+// simultaneous diagrams (or a theme change) cannot borrow each other's theme.
+let renderQueue: Promise<void> = Promise.resolve();
 
-export function MermaidDiagram({ code }: Props) {
+export function MermaidDiagram({ code }: { code: string }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [error, setError] = useState<string | null>(null);
+  const theme = useContext(ReadingThemeContext);
+  const id = `mermaid-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const [result, setResult] = useState<{ code: string; theme: string; error?: string } | null>(null);
+  const current = result?.code === code && result.theme === theme ? result : null;
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    renderQueue = renderQueue.catch(() => {}).then(async () => {
+      if (cancelled) return;
       try {
-        const mermaidModule = await import("mermaid");
-        const mermaid = mermaidModule.default;
+        const { default: mermaid } = await import("mermaid");
+        if (cancelled) return;
         mermaid.initialize({
           startOnLoad: false,
-          theme: "default",
+          theme: theme === "dark" ? "dark" : "default",
           securityLevel: "loose",
-          fontFamily: "inherit",
+          fontFamily: "Manrope, system-ui, sans-serif",
+          suppressErrorRendering: true,
         });
-        const id = "mermaid-" + Math.random().toString(36).slice(2, 9);
-        const { svg } = await mermaid.render(id, code);
+        const { svg, bindFunctions } = await mermaid.render(id, code);
         if (!cancelled && ref.current) {
           ref.current.innerHTML = svg;
+          bindFunctions?.(ref.current);
+          setResult({ code, theme });
         }
-      } catch (err) {
+      } catch (error) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Diagram render failed");
+          if (ref.current) ref.current.innerHTML = "";
+          setResult({ code, theme, error: error instanceof Error ? error.message : "Diagram render failed" });
         }
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [code]);
+    });
+    return () => { cancelled = true; };
+  }, [code, theme, id]);
 
-  if (error) {
-    return (
-      <div className="my-6 p-4 border border-border rounded bg-card">
-        <p className="text-sm text-muted">Diagram could not render: {error}</p>
-        <pre className="text-xs mt-2 overflow-x-auto text-muted">{code}</pre>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      ref={ref}
-      className="my-6 flex justify-center overflow-x-auto rounded border border-border bg-card p-4"
-    />
-  );
+  return <figure className={styles.diagram} aria-label="Article diagram" aria-busy={!current}>
+    {!current && <p role="status" className={styles.diagramNote}>Rendering diagram…</p>}
+    <div ref={ref} className={styles.diagramCanvas} hidden={!current || !!current.error} tabIndex={0} role="region" aria-label="Scrollable diagram" />
+    {current?.error && <p role="status" className={styles.diagramNote}>This diagram could not be displayed. Its source is available below.</p>}
+    <details className={styles.diagramSource} open={current?.error ? true : undefined}>
+      <summary>Diagram source</summary>
+      <pre tabIndex={0}><code>{code}</code></pre>
+    </details>
+  </figure>;
 }

@@ -20,7 +20,7 @@ export default async function FAQPage() {
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "FAQ", url: "/faq" }]} />
       {schemaItems.length > 0 && <FAQPageSchema items={schemaItems} url="/faq" />}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+      <div className="page-shell public-info">
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-12">FAQ</h1>
         <div className="space-y-8">
           {items.length === 0 ? (

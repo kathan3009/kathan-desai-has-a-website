@@ -73,7 +73,7 @@ export default function SpideyProvider({
       if (busy.current) return;
       const next = !readTheme();
 
-      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reduced = document.documentElement.dataset.motion === "reduced" || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       if (reduced || !origin) {
         applyTheme(next);

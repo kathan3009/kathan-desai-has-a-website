@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import {useReducedMotion} from "../MotionPreference";
 
 /**
  * Ambient depth layer for web-slinger mode: three orb-weaver lattices hung at
@@ -35,6 +36,7 @@ const LAYERS: LayerSpec[] = [
 ];
 
 export default function WebLattice() {
+  const reduced=useReducedMotion();
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,7 +48,6 @@ export default function WebLattice() {
       const host = hostRef.current;
       if (disposed || !host) return;
 
-      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const small = window.innerWidth < 640;
 
       const scene = new THREE.Scene();
@@ -151,6 +152,7 @@ export default function WebLattice() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        if(reduced)renderer.render(scene,camera);
       };
 
       let raf = 0;
@@ -207,13 +209,13 @@ export default function WebLattice() {
         renderer.dispose();
         renderer.domElement.remove();
       };
-    })();
+    })().catch(() => { /* The CSS skyline remains available without WebGL. */ });
 
     return () => {
       disposed = true;
       teardown();
     };
-  }, []);
+  }, [reduced]);
 
   return (
     <div

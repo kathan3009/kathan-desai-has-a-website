@@ -16,7 +16,7 @@ export default async function WorkPage() {
   return (
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "Work", url: "/work" }]} />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+      <div className="page-shell public-info">
         <header className="mb-12">
           <p className="text-[10px] text-accent font-semibold uppercase tracking-[0.3em] mb-2">Experience</p>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">Work</h1>

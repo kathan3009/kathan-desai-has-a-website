@@ -1,25 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
-
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-export default function TimeGreeting() {
-  const [greeting, setGreeting] = useState<string | null>(null);
-
-  useEffect(() => {
-    setGreeting(getGreeting());
-  }, []);
-
-  return (
-    <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-foreground mb-4 tracking-tight">
-      {greeting ? `${greeting},` : "Hi,"}<br />
-      I'm Kathan.
-    </h1>
-  );
-}
+import { useSyncExternalStore } from 'react';
+function greeting(){const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening';}
+function subscribe(fn:()=>void){const timer=setInterval(fn,60000);return()=>clearInterval(timer);}
+export default function TimeGreeting(){const text=useSyncExternalStore(subscribe,greeting,()=> 'Hi');return <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-foreground mb-4 tracking-tight">{text},<br/>I’m Kathan.</h1>;}

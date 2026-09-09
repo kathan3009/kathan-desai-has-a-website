@@ -22,7 +22,7 @@ export default async function AboutPage() {
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "About", url: "/about" }]} />
       {schemaItems.length > 0 && <FAQPageSchema items={schemaItems} url="/about" />}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+      <div className="page-shell public-info">
         <header className="mb-12">
           <p className="text-[10px] text-accent font-semibold uppercase tracking-[0.3em] mb-2">Who I am</p>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">About</h1>

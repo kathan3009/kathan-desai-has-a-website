@@ -1,35 +1,40 @@
-import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/auth";
+import type { NextRequest } from "next/server";
 import dbConnect from "@/lib/db";
 import { sanitizeForMongo } from "@/lib/sanitize";
 import Blog from "@/models/Blog";
+import {
+  adminJson, AdminRequestError, parseAdminId, readAdminJson,
+  requireAdminAuthentication, requireAdminDatabase, requireAdminOrigin, withAdminErrors,
+} from "@/lib/adminRequest";
 
 export async function PUT(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await isAdminAuthenticated();
-  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await dbConnect();
-  const { id } = await params;
-  const body = sanitizeForMongo(await _request.json());
-  if (body.content || body.title) {
-    body.dateModified = new Date();
-  }
-  const item = await Blog.findByIdAndUpdate(id, body, { new: true, runValidators: true });
-  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(item);
+  return withAdminErrors(async () => {
+    requireAdminOrigin(request);
+    await requireAdminAuthentication();
+    const id = parseAdminId((await params).id);
+    const body = sanitizeForMongo(await readAdminJson(request));
+    if (body.content || body.title) body.dateModified = new Date();
+    requireAdminDatabase(await dbConnect());
+    const item = await Blog.findByIdAndUpdate(id, body, { new: true, runValidators: true });
+    if (!item) throw new AdminRequestError(404, "Not found");
+    return adminJson(item);
+  });
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await isAdminAuthenticated();
-  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await dbConnect();
-  const { id } = await params;
-  const item = await Blog.findByIdAndDelete(id);
-  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ success: true });
+  return withAdminErrors(async () => {
+    requireAdminOrigin(request);
+    await requireAdminAuthentication();
+    const id = parseAdminId((await params).id);
+    requireAdminDatabase(await dbConnect());
+    const item = await Blog.findByIdAndDelete(id);
+    if (!item) throw new AdminRequestError(404, "Not found");
+    return adminJson({ success: true });
+  });
 }

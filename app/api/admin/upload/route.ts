@@ -1,24 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/auth";
+import { adminJson, adminErrorResponse, AdminRequestError, requireAdminAuthentication, requireAdminOrigin } from "@/lib/adminRequest";
 import { saveUpload } from "@/lib/upload";
+import { getMediaType, readLegacyUpload, uploadToR2, UploadError } from "@/lib/r2";
 
-export async function POST(request: NextRequest) {
-  const auth = await isAdminAuthenticated();
-  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const runtime = "nodejs";
 
-  const formData = await request.formData();
-  const file = formData.get("file") as File | null;
-  const subdir = (formData.get("subdir") as string) || undefined;
-
-  if (!file) {
-    return NextResponse.json({ error: "No file provided" }, { status: 400 });
-  }
-
+export async function POST(request: Request) {
   try {
-    const path = await saveUpload(file, subdir);
-    return NextResponse.json({ path });
-  } catch (err) {
-    console.error("Upload error:", err);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    await requireAdminAuthentication();
+    requireAdminOrigin(request);
+    const { file, subdir } = await readLegacyUpload(request);
+    if (getMediaType(file.type.toLowerCase()) !== "image") throw new UploadError("Choose a JPEG, PNG, GIF, WebP or AVIF image.");
+    // Vercel's filesystem is ephemeral/read-only. Retain the existing { path } contract.
+    const path = process.env.VERCEL ? await uploadToR2(file, subdir) : await saveUpload(file, subdir);
+    return adminJson({ path });
+  } catch (error) {
+    if (error instanceof AdminRequestError) return adminErrorResponse(error);
+    if (error instanceof UploadError) return adminJson({ error: error.message }, error.status);
+    return adminJson({ error: "Upload failed. Check storage configuration and permissions, then retry." }, 502);
   }
 }

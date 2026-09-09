@@ -7,6 +7,8 @@ type ArticleSchemaProps = {
   dateModified: string;
   image?: string;
   url: string;
+  authorName?: string;
+  authorUrl?: string;
 };
 
 export function ArticleSchema({
@@ -16,7 +18,10 @@ export function ArticleSchema({
   dateModified,
   image,
   url,
+  authorName = "Kathan Desai",
+  authorUrl = `${SITE_URL}/about`,
 }: ArticleSchemaProps) {
+  const resolvedAuthorUrl = authorUrl.startsWith("http") ? authorUrl : `${SITE_URL}${authorUrl.startsWith("/") ? "" : "/"}${authorUrl}`;
   const schema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -27,13 +32,13 @@ export function ArticleSchema({
     url: url.startsWith("http") ? url : `${SITE_URL}${url}`,
     author: {
       "@type": "Person",
-      name: "Kathan Desai",
-      url: SITE_URL,
+      name: authorName,
+      url: resolvedAuthorUrl,
     },
     publisher: {
       "@type": "Organization",
       name: "Kathan Desai",
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` },
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/kathan.JPG` },
     },
     ...(image && { image }),
   };

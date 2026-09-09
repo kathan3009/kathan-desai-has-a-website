@@ -1,30 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/auth";
-import { uploadToR2 } from "@/lib/r2";
+import { adminJson, adminErrorResponse, AdminRequestError, requireAdminAuthentication, requireAdminOrigin } from "@/lib/adminRequest";
+import { uploadToR2, readLegacyUpload, UploadError } from "@/lib/r2";
 
-export async function POST(request: NextRequest) {
-  const auth = await isAdminAuthenticated();
-  if (!auth) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export const runtime = "nodejs";
 
-  const formData = await request.formData();
-  const file = formData.get("file") as File | null;
-  const subdir = (formData.get("subdir") as string) || undefined;
-
-  if (!file || file.size === 0) {
-    return NextResponse.json(
-      { error: "No file provided" },
-      { status: 400 }
-    );
-  }
-
+// Backwards-compatible small-file endpoint. Larger files use upload-presign.
+export async function POST(request: Request) {
   try {
-    const url = await uploadToR2(file, subdir);
-    return NextResponse.json({ url });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Upload failed";
-    const status = message.includes("not configured") ? 503 : 400;
-    return NextResponse.json({ error: message }, { status });
+    await requireAdminAuthentication();
+    requireAdminOrigin(request);
+    const { file, subdir } = await readLegacyUpload(request);
+    return adminJson({ url: await uploadToR2(file, subdir) });
+  } catch (error) {
+    if (error instanceof AdminRequestError) return adminErrorResponse(error);
+    if (error instanceof UploadError) return adminJson({ error: error.message }, error.status);
+    return adminJson({ error: "R2 upload failed. Check storage configuration and permissions, then retry." }, 502);
   }
 }

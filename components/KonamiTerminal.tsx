@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import {usePlayfulStatus} from "./PlayfulStatus";
 
 const MAGIC_WORD = "abracadabra";
-const PAGES = ["about", "work", "projects", "blogs", "photography"];
+const PAGES = ["about", "work", "projects", "blogs", "photography", "skills", "certifications", "faq", "now"];
 
 const HACK_SEQUENCE = [
   { text: "[*] Initializing Pentest Copilot v2.1.0...", delay: 400 },
@@ -35,11 +36,13 @@ function randomMatrixLine(width: number): string {
 }
 
 export default function KonamiTerminal() {
+  const playfulStatus=usePlayfulStatus();
   const [active, setActive] = useState(false);
   const [lines, setLines] = useState<Array<{ text: string; type: "output" | "cmd" | "matrix" | "hack" }>>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const keyBuffer = useRef("");
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -49,6 +52,24 @@ export default function KonamiTerminal() {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
   }, []);
+
+  useEffect(() => {
+    if (!active) return;
+    const previous=document.activeElement as HTMLElement|null;
+    const overflow=document.body.style.overflow;
+    document.body.style.overflow='hidden';
+    const key=(event:KeyboardEvent)=>{
+      if(event.key==='Escape'){event.preventDefault();clearTimers();setActive(false);setLines([]);setBusy(false);return;}
+      if(event.key!=='Tab')return;
+      const controls=modalRef.current?.querySelectorAll<HTMLElement>('button,input');
+      if(!controls?.length)return;
+      const first=controls[0],last=controls[controls.length-1];
+      if(event.shiftKey && (document.activeElement===first||!modalRef.current?.contains(document.activeElement))){event.preventDefault();last.focus();}
+      else if(!event.shiftKey && (document.activeElement===last||!modalRef.current?.contains(document.activeElement))){event.preventDefault();first.focus();}
+    };
+    document.addEventListener('keydown',key);
+    return()=>{document.body.style.overflow=overflow;document.removeEventListener('keydown',key);previous?.focus({preventScroll:true});};
+  },[active,clearTimers]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -130,6 +151,11 @@ export default function KonamiTerminal() {
       if (!trimmed) return;
 
       switch (trimmed) {
+        case "now":
+          addLine(`> ${cmd}`, "cmd");
+          addLine(`Probably ${playfulStatus}.`);
+          addLine("A random guess, not live activity.");
+          break;
         case "help":
           addLine(`> ${cmd}`, "cmd");
           addLine("AVAILABLE COMMANDS:", "output");
@@ -138,6 +164,7 @@ export default function KonamiTerminal() {
           addLine("  cd <page> \u2014 navigate (e.g. cd blogs)", "output");
           addLine("  hack      \u2014 run a pentest simulation", "output");
           addLine("  matrix    \u2014 take the red pill", "output");
+          addLine("  now       — a guess at what I am doing", "output");
           addLine("  clear     \u2014 clear terminal", "output");
           addLine("  exit      \u2014 close terminal", "output");
           addLine("", "output");
@@ -212,7 +239,7 @@ export default function KonamiTerminal() {
           }
       }
     },
-    [addLine, router, runHack, runMatrix, clearTimers],
+    [addLine, router, runHack, runMatrix, clearTimers, playfulStatus],
   );
 
   const close = useCallback(() => {
@@ -228,7 +255,9 @@ export default function KonamiTerminal() {
     <div
       className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) close(); }}
+      ref={modalRef}
       role="dialog"
+      aria-modal="true"
       aria-label="Terminal"
     >
       <div className="w-full max-w-2xl h-[70vh] bg-[#0d0d0d] border border-[#333] rounded-lg shadow-2xl flex flex-col font-mono text-sm overflow-hidden">
