@@ -13,7 +13,7 @@ const sections = [
   ["uploads", "Uploads", "Upload images and videos, then copy their media URLs."],
 ];
 export default function AdminDashboardPage() {
-  return <section><header className="admin-heading"><div><h1>Your website, behind the scenes.</h1><p>Write something new, update your work, or give an existing page a little attention.</p></div></header>
+  return <section><header className="admin-heading"><div><h1>Website admin.</h1><p>Add and edit content across the site.</p></div></header>
     <div className="admin-overview">{sections.map(([path,title,description]) => <Link href={`/${ADMIN_PATH}/${path}`} key={path}><div><h2>{title}</h2><p>{description}</p></div><span aria-hidden="true">↗</span></Link>)}</div>
   </section>;
 }

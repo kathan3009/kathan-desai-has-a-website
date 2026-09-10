@@ -67,7 +67,7 @@ export default async function BlogPage({ searchParams }: Props) {
       <div className={styles.indexInner}>
         <header className={styles.indexHeader}>
           <h1>Writing</h1>
-          <p>Notes on security, building things, and what I learn along the way.</p>
+          <p>Build notes, security, and ideas I wanted to work through in public.</p>
         </header>
         <form action="/blogs" method="get" role="search" className={styles.search}>
           <label htmlFor="writing-search">Search the writing</label>

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Photography",
-  description: "Kathan Desai's photography — moments captured through the lens.",
+  description: "Photographs by Kathan Desai, taken on the road and away from work.",
 };
 
 export default async function PhotographyPage({ searchParams }: {

@@ -48,7 +48,7 @@ export default function AdminUploadsPage() {
     try {
       for (const file of queue) {
         const url = await uploadFileDirect(file, subdir, message => {
-          setProgress(`${completed + 1} of ${queue.length}: ${file.name} — ${message}`);
+          setProgress(`${completed + 1} of ${queue.length}: ${file.name}. ${message}`);
         });
         // Commit each confirmed result immediately so later failures cannot hide its link.
         setResults(previous => [{ url, name: file.name }, ...previous]);

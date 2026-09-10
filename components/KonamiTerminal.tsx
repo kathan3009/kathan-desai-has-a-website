@@ -164,7 +164,7 @@ export default function KonamiTerminal() {
           addLine("  cd <page> \u2014 navigate (e.g. cd blogs)", "output");
           addLine("  hack      \u2014 run a pentest simulation", "output");
           addLine("  matrix    \u2014 take the red pill", "output");
-          addLine("  now       — a guess at what I am doing", "output");
+          addLine("  now       : a guess at what I am doing", "output");
           addLine("  clear     \u2014 clear terminal", "output");
           addLine("  exit      \u2014 close terminal", "output");
           addLine("", "output");
@@ -172,9 +172,9 @@ export default function KonamiTerminal() {
         case "whoami":
           addLine(`> ${cmd}`, "cmd");
           addLine("Kathan Desai", "hack");
-          addLine("Co-Founder & COO @ BugBase", "output");
+          addLine("Founder @ BugBase", "output");
           addLine("Building Pentest Copilot \u2014 AI for autonomous pentesting", "output");
-          addLine("Based in San Francisco & New Delhi", "output");
+          addLine("In San Francisco. From New Delhi.", "output");
           addLine("Dropped out at 20 to build.", "output");
           addLine("", "output");
           break;

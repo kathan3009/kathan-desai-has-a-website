@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "About",
   description:
-    "Kathan Desai is the Founder of bugbase. Learn about his background, bugbase, and what drives his work in cybersecurity.",
+    "Kathan Desai is a founder of BugBase, from New Delhi and currently in San Francisco.",
 };
 
 export default async function AboutPage() {

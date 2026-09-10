@@ -22,11 +22,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kathandesai.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Kathan Desai — Builder, BugBase co-founder",
+    default: "Kathan Desai | Founder of BugBase",
     template: "Kathan Desai | %s",
   },
   description:
-    "Kathan Desai co-founded BugBase and builds AI for security. Projects, writing, and photographs from San Francisco and New Delhi.",
+    "Kathan Desai is a founder of BugBase, now in San Francisco and building AI products for security. Projects, writing, and photographs.",
   openGraph: {
     type: "website",
     locale: "en_US",

@@ -5,6 +5,8 @@ test.beforeEach(async({page})=>{await page.route('**/api/blog/*/view',route=>rou
 test('home, dedicated routes, clocks, hidden terminal and status',async({page})=>{
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto('/');await expect(page.locator('body')).toHaveCSS('font-family',/Manrope/);await expect(page.getByRole('heading',{name:'I’m Kathan.'})).toBeVisible();
+ await expect(page.getByText('I’m a founder of BugBase.')).toBeVisible();await expect(page.getByText('In San Francisco, building AI for security.')).toBeVisible();
+ await expect(page.locator('footer a[href="https://x.com/heykathan"]')).toBeVisible();
  await expect(page.locator('.scene.scene-ready canvas')).toBeVisible();await expect(page.locator('.clock time')).toHaveCount(2);
  await expect(page.getByRole('button',{name:/terminal/i})).toHaveCount(0);
  await page.getByLabel('Reduce motion',{exact:true}).check();await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');await expect(page.locator('.scene canvas')).toHaveCount(0);await page.getByLabel('Reduce motion',{exact:true}).uncheck();await page.evaluate(()=>{(document.activeElement as HTMLElement | null)?.blur();});
@@ -12,7 +14,7 @@ test('home, dedicated routes, clocks, hidden terminal and status',async({page})=
  await page.getByRole('textbox',{name:'Terminal input'}).fill('now');await page.keyboard.press('Enter');
  await expect(page.getByText('A random guess, not live activity.')).toBeVisible();await page.keyboard.press('Escape');
  await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Projects',exact:true}).click();await expect(page).toHaveURL(/\/projects$/);
- await expect(page.getByRole('heading',{name:'Made to be used.'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Things I’ve built.'})).toBeVisible();
  await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Photography',exact:true}).click();await expect(page).toHaveURL(/\/photography$/);
  expect(errors).toEqual([]);
 });
@@ -23,6 +25,7 @@ test('mobile navigation and quiet motion work without horizontal overflow',async
  await page.getByRole('button',{name:'Menu',exact:true}).click();await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Writing',exact:true}).click();
  await expect(page).toHaveURL(/\/blogs$/);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
  for(const route of ['/photography','/projects','/about','/work','/skills','/certifications','/faq','/now']){await page.goto(route);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();await expect(page.locator('main h1').first()).toBeVisible();}
+ await expect(page.getByRole('heading',{name:'In San Francisco.'})).toBeVisible();
 });
 test('real projects, article content and persistent reader settings',async({page})=>{
  test.skip(!real,'Run against Vercel with TEST_REAL_CONTENT=1');

@@ -13,7 +13,7 @@ export function PersonSchema() {
     },
     url: SITE_URL,
     sameAs: [
-      "https://x.com/kathandesai3009",
+      "https://x.com/heykathan",
       "https://github.com/kathan3009",
       "https://www.linkedin.com/in/kathandesai1/",
     ].filter(Boolean),
