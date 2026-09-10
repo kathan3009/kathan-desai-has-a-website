@@ -63,6 +63,8 @@ type GestureContextValue = {
   minimizeGuide(): void;
   dismissError(): void;
   setPreferences(next: Partial<GesturePreferences>): void;
+  /** Called by the admin layout. Returns the release for unmount. */
+  lockOut(): () => void;
   registerSurface(surface: GestureSurface | null): void;
   registerHandFrames(listener: ((result: HandResult | null) => void) | null): void;
   videoElement(): HTMLVideoElement | null;
@@ -87,6 +89,7 @@ const GestureContext = createContext<GestureContextValue>({
   minimizeGuide: noop,
   dismissError: noop,
   setPreferences: noop,
+  lockOut: () => noop,
   registerSurface: noop,
   registerHandFrames: noop,
   videoElement: () => null,
@@ -101,9 +104,12 @@ export const useGestures = () => useContext(GestureContext);
 const TARGETS = 'a[href], button, summary, [role="button"], input[type="checkbox"], input[type="radio"], [data-gesture-target]';
 const SCOPE = '[data-gesture-scope]';
 
-const ADMIN_PATHS = ['/admin', `/${process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin'}`];
-
-const isAdminRoute = (path: string) => ADMIN_PATHS.some(prefix => path === prefix || path.startsWith(`${prefix}/`));
+/**
+ * Only the built-in path is named here. The deployment's real admin path is a
+ * secret, and this provider ships to every visitor, so it must not read
+ * NEXT_PUBLIC_ADMIN_PATH — the admin layout locks the session out instead.
+ */
+const isAdminRoute = (path: string) => path === '/admin' || path.startsWith('/admin/');
 
 const SKELETON = [
   [0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11],
@@ -143,7 +149,8 @@ function hitTarget(p: Point, held: HTMLElement | null = null, assisted = false):
 
 export default function GestureProvider({children}: {children: React.ReactNode}) {
   const pathname = usePathname() || '/';
-  const admin = isAdminRoute(pathname);
+  const [locked, setLocked] = useState(false);
+  const admin = locked || isAdminRoute(pathname);
   const mode: GestureMode = pathname === '/paint' ? 'paint' : 'browse';
 
   const [enabled, setEnabled] = useState(false);
@@ -701,6 +708,11 @@ export default function GestureProvider({children}: {children: React.ReactNode})
     lastWrist.current = null;
   }, []);
 
+  const lockOut = useCallback(() => {
+    setLocked(true);
+    return () => setLocked(false);
+  }, []);
+
   const registerSurface = useCallback((surface: GestureSurface | null) => {
     surfaceRef.current = surface;
   }, []);
@@ -872,11 +884,12 @@ export default function GestureProvider({children}: {children: React.ReactNode})
         setMessage('');
       },
       setPreferences,
+      lockOut,
       registerSurface,
       registerHandFrames,
       videoElement,
     }),
-    [enabled, admin, status, mode, message, pose, guideOpen, supported, preferences, enable, disable, resume, setPreferences, registerSurface, registerHandFrames, videoElement],
+    [enabled, admin, status, mode, message, pose, guideOpen, supported, preferences, enable, disable, resume, setPreferences, lockOut, registerSurface, registerHandFrames, videoElement],
   );
 
   return (
