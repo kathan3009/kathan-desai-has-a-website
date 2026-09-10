@@ -340,8 +340,8 @@
 }
 .sheetPanel {
   pointer-events: auto;
-  width: min(620px, 100%);
-  max-height: min(78vh, 660px);
+  width: min(780px, 100%);
+  max-height: min(84vh, 720px);
   overflow: auto;
   padding: 24px 26px 22px;
   border-radius: 20px;
@@ -349,9 +349,9 @@
   background: var(--background);
   box-shadow: 0 24px 70px -30px rgba(0, 0, 0, 0.55);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   align-content: start;
-  gap: 20px 30px;
+  gap: 18px 26px;
 }
 /* The head and the colours read across the whole sheet. */
 .sheetPanel > .sheetHead,

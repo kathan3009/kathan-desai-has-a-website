@@ -37,6 +37,12 @@ export type GestureSurface = {
   cancel(): void;
   /** Eraser shows its true footprint; anything else uses the default ring. */
   footprint(point: Point): number | null;
+  /**
+   * The rectangle the hand's reach maps onto. Paint hands back the paper, or
+   * the open tool sheet, so the whole surface is reachable rather than a band
+   * in the middle of the page. Null means the whole viewport.
+   */
+  region(): {left: number; top: number; width: number; height: number} | null;
 };
 
 type GestureContextValue = {
@@ -182,6 +188,7 @@ export default function GestureProvider({children}: {children: React.ReactNode})
   const missingSince = useRef(0);
   const poseRef = useRef('');
   const mouseDown = useRef(false);
+  const regionKey = useRef('');
 
   preferencesRef.current = preferences;
   modeRef.current = mode;
@@ -396,7 +403,18 @@ export default function GestureProvider({children}: {children: React.ReactNode})
   const handleGesture = useCallback(
     (event: GestureEvent) => {
       if (mouseDown.current) return;
-      const px = (point: Point) => ({x: point.x * window.innerWidth, y: point.y * window.innerHeight});
+      // Reach maps onto whatever owns input: the paper, the open tool sheet, or
+      // the page. Switching between them snaps the cursor instead of sliding.
+      const region = modeRef.current === 'paint' ? surfaceRef.current?.region() ?? null : null;
+      const key = region ? `${Math.round(region.left)}:${Math.round(region.top)}:${Math.round(region.width)}:${Math.round(region.height)}` : '';
+      if (key !== regionKey.current) {
+        regionKey.current = key;
+        shown.current = null;
+      }
+      const px = (point: Point) =>
+        region
+          ? {x: region.left + point.x * region.width, y: region.top + point.y * region.height}
+          : {x: point.x * window.innerWidth, y: point.y * window.innerHeight};
 
       if (event.type === 'pointer') {
         const p = px(event.point);
@@ -818,6 +836,12 @@ export default function GestureProvider({children}: {children: React.ReactNode})
       receiveHands,
       engine: engineRef,
       tracker: trackerRef,
+      /** Viewport point to the normalised reach that would land on it. */
+      toReach(x: number, y: number) {
+        const region = modeRef.current === 'paint' ? surfaceRef.current?.region() ?? null : null;
+        if (!region) return {x: x / window.innerWidth, y: y / window.innerHeight};
+        return {x: (x - region.left) / region.width, y: (y - region.top) / region.height};
+      },
       get preferences() {
         return preferencesRef.current;
       },

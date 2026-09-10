@@ -62,6 +62,7 @@ export default function PaintTools({
   clearing,
   onClear,
   onKeepDrawing,
+  onTurnOff,
 }: {
   state: ToolState;
   actions: ToolActions;
@@ -69,6 +70,7 @@ export default function PaintTools({
   clearing?: boolean;
   onClear?(): void;
   onKeepDrawing?(): void;
+  onTurnOff?(): void;
 }) {
   const erasing = state.brush === 'eraser';
   const sizes = erasing ? ERASER_SIZES : INK_SIZES;
@@ -162,48 +164,48 @@ export default function PaintTools({
           <button type="button" className={styles.button} onClick={actions.redo} disabled={!state.redo} data-gesture-dwell>
             Redo
           </button>
-          {!sheet && (
-            <>
-              <button type="button" className={styles.button} onClick={() => actions.zoomBy(1.2)} aria-label="Zoom in" data-gesture-dwell>
-                Zoom in
+          <button type="button" className={styles.button} onClick={() => actions.zoomBy(1.2)} aria-label="Zoom in" data-gesture-dwell>
+            Zoom in
+          </button>
+          <button type="button" className={styles.button} onClick={() => actions.zoomBy(1 / 1.2)} aria-label="Zoom out" data-gesture-dwell>
+            Zoom out
+          </button>
+          <button type="button" className={styles.button} onClick={actions.resetView} data-gesture-dwell>
+            Fit ({Math.round(state.zoom * 100)}%)
+          </button>
+          <button type="button" className={styles.button} onClick={actions.togglePaper} data-gesture-dwell>
+            {state.paper === 'white' ? 'Night paper' : 'White paper'}
+          </button>
+        </div>
+        <div className={styles.buttons} style={{marginTop: 10}}>
+          {clearing ? (
+            <span className={styles.confirm}>
+              Clear the whole page?
+              <button type="button" className={styles.button} onClick={onClear}>
+                Clear it
               </button>
-              <button type="button" className={styles.button} onClick={() => actions.zoomBy(1 / 1.2)} aria-label="Zoom out" data-gesture-dwell>
-                Zoom out
+              <button type="button" className={styles.link} onClick={onKeepDrawing}>
+                Keep drawing
               </button>
-              <button type="button" className={styles.button} onClick={actions.resetView} data-gesture-dwell>
-                Fit ({Math.round(state.zoom * 100)}%)
-              </button>
-              <button type="button" className={styles.button} onClick={actions.togglePaper} data-gesture-dwell>
-                {state.paper === 'white' ? 'Night paper' : 'White paper'}
-              </button>
-            </>
+            </span>
+          ) : (
+            <button type="button" className={`${styles.button} ${styles.danger}`} onClick={actions.askClear} disabled={!state.strokes}>
+              Clear
+            </button>
           )}
         </div>
-        {!sheet && (
-          <div className={styles.buttons} style={{marginTop: 10}}>
-            {clearing ? (
-              <span className={styles.confirm}>
-                Clear the whole page?
-                <button type="button" className={styles.button} onClick={onClear}>
-                  Clear it
-                </button>
-                <button type="button" className={styles.link} onClick={onKeepDrawing}>
-                  Keep drawing
-                </button>
-              </span>
-            ) : (
-              <button
-                type="button"
-                className={`${styles.button} ${styles.danger}`}
-                onClick={actions.askClear}
-                disabled={!state.strokes}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        )}
       </section>
+
+      {sheet && onTurnOff && (
+        <section className={styles.group}>
+          <h2>Camera</h2>
+          <div className={styles.buttons}>
+            <button type="button" className={`${styles.button} ${styles.danger}`} onClick={onTurnOff} data-gesture-dwell>
+              Turn off hand painting
+            </button>
+          </div>
+        </section>
+      )}
     </>
   );
 }

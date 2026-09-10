@@ -54,6 +54,23 @@ test('a deliberate release still ends the stroke promptly', () => {
   assert.equal(h.count('up'), 1);
 });
 
+test('opening the pinch stops the ink immediately, and ends it where it parted', () => {
+  const h = harness();
+  h.arm();
+  h.sample({pinchRatio: 0.15, point: {x: 0.2, y: 0.2}});
+  for (let i = 0; i < 6; i++) h.sample({pinchRatio: 0.15, point: {x: 0.2 + i * 0.05, y: 0.2}});
+  const drawn = h.count('move');
+  // The fingers part, and the hand keeps travelling for several frames.
+  h.sample({pinchRatio: 0.95, point: {x: 0.6, y: 0.2}});
+  h.sample({pinchRatio: 0.95, point: {x: 0.9, y: 0.9}});
+  assert.equal(h.count('move'), drawn, 'no ink is laid down once the pinch starts opening');
+  h.sample({pinchRatio: 0.95, point: {x: 0.9, y: 0.9}});
+  const up = h.events.filter(event => event.type === 'up').at(-1);
+  assert.ok(up, 'the stroke ends');
+  // It ends near where the fingers parted, not where the hand drifted to.
+  assert.ok(up.point.x < 0.6, `ended at ${up.point.x}`);
+});
+
 test('a hand relaxing out of a pinch does not read as a cancelling fist', () => {
   const h = harness();
   h.arm();
@@ -148,6 +165,14 @@ function hand({curl = [], thumbAt = {x: 0.5, y: 0.2}} = {}) {
   lm[4] = thumbAt;
   return lm;
 }
+
+test('the control band matches what a seated hand can actually reach', () => {
+  // A hand held comfortably in front of the chest, near the bottom of its reach.
+  const low = describeHand(hand({curl: [1, 2, 3]}).map(point => ({...point, y: point.y * 0 + 0.62})));
+  assert.ok(low.point.y > 0.9, `low reach maps to ${low.point.y}, which should be near the bottom`);
+  const high = describeHand(hand({curl: [1, 2, 3]}).map(point => ({...point, y: 0.08})));
+  assert.ok(high.point.y < 0.1, `high reach maps to ${high.point.y}`);
+});
 
 test('poses read from landmarks, and the fingertip stays the cursor anchor', () => {
   assert.equal(describeHand(hand()).pose, 'palm');

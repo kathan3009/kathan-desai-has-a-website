@@ -48,6 +48,8 @@ export class GestureEngine {
   armed = false;
   releaseSince: number | null = null;
   openingSince: number | null = null;
+  /** Where the hand was when the pinch began to open. */
+  holdPoint: Point | null = null;
   pinchEndedAt = 0;
   pose: Pose = '';
   poseSince = 0;
@@ -70,6 +72,7 @@ export class GestureEngine {
     this.armed = false;
     this.releaseSince = null;
     this.openingSince = null;
+    this.holdPoint = null;
     this.pinchEndedAt = 0;
     this.pose = '';
     this.poseSince = 0;
@@ -111,7 +114,10 @@ export class GestureEngine {
     // does not lift the brush and drop the whole interaction.
     const closed = sample.pinchRatio < (this.pinch ? PINCH_OPEN : PINCH_CLOSE);
     if (this.pinch && !closed) {
-      this.openingSince ??= time;
+      if (this.openingSince === null) {
+        this.openingSince = time;
+        this.holdPoint = {...this.point};
+      }
       if (time - this.openingSince >= PINCH_RELEASE_HOLD) {
         this.pinch = false;
         this.pinchEndedAt = time;
@@ -174,9 +180,13 @@ export class GestureEngine {
       return;
     }
     if (this.state === 'pinch') {
-      if (this.pinch) this.emit({type: 'move', point});
-      else {
-        this.emit({type: 'up', point});
+      // No ink while the pinch might be ending: a release should stop the line
+      // where the fingers parted, not where the hand travelled afterwards.
+      if (this.pinch) {
+        if (this.openingSince === null) this.emit({type: 'move', point});
+      } else {
+        this.emit({type: 'up', point: this.holdPoint || point});
+        this.holdPoint = null;
         this.state = 'idle';
       }
       return;
@@ -234,7 +244,7 @@ export function describeHand(lm: Landmark[], aspect = 4 / 3) {
         ? 'v'
         : 'point';
   // Never switch the cursor anchor during a pinch: that creates target jumps.
-  const map = (p: Landmark) => ({x: clamp((1 - p.x - 0.12) / 0.76, 0, 1), y: clamp((p.y - 0.1) / 0.76, 0, 1)});
+  const map = (p: Landmark) => ({x: clamp((1 - p.x - 0.1) / 0.8, 0, 1), y: clamp((p.y - 0.06) / 0.6, 0, 1)});
   const palmCenter = [0, 5, 9, 13, 17].reduce((p, i) => ({x: p.x + lm[i].x / 5, y: p.y + lm[i].y / 5}), {x: 0, y: 0});
   return {point: map(lm[8]), scrollPoint: map(palmCenter), pinchRatio, pose, wrist: lm[0]};
 }

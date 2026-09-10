@@ -13,6 +13,7 @@ type Harness = {
   receiveHands(result: {landmarks: {x: number; y: number}[][]; handedness: {categoryName: string}[][]; aspect: number}): void;
   engine: {current: {update(sample: unknown, time: number): void; cancel(): void} | null};
   tracker: {current: {running: boolean; stop(): void} | null};
+  toReach(x: number, y: number): {x: number; y: number};
   preferences: Record<string, unknown>;
 };
 
@@ -48,9 +49,10 @@ async function centre(page: Page, selector: string) {
   return {x: found.x + found.width / 2, y: found.y + found.height / 2};
 }
 
+// Reach is mapped onto whatever owns input, so aim through the same conversion.
 async function pinchAt(page: Page, point: {x: number; y: number}) {
   await page.evaluate(({x, y}) => {
-    const p = {x: x / innerWidth, y: y / innerHeight};
+    const p = window.__gestureTest.toReach(x, y);
     window.__gestureTest.event({type: 'pointer', point: p, pose: 'point', selecting: true});
     window.__gestureTest.event({type: 'down', point: p});
     window.__gestureTest.event({type: 'up', point: p});
@@ -59,7 +61,7 @@ async function pinchAt(page: Page, point: {x: number; y: number}) {
 
 async function dwellAt(page: Page, point: {x: number; y: number}) {
   await page.evaluate(async ({x, y}) => {
-    const p = {x: x / innerWidth, y: y / innerHeight};
+    const p = window.__gestureTest.toReach(x, y);
     for (let i = 0; i < 24; i++) {
       window.__gestureTest.event({type: 'pointer', point: p, pose: 'point', selecting: true});
       await new Promise(resolve => setTimeout(resolve, 40));
@@ -286,7 +288,7 @@ test('paint draws by mouse, erases, undoes, and exports artwork only', async ({p
   expect(errors).toEqual([]);
 });
 
-test('paint tools respond to dwell, and clearing never does', async ({page}) => {
+test('sheet tools respond to dwell, and clearing never does', async ({page}) => {
   await page.goto(`/paint${TEST}`);
   await ready(page, true);
   const canvas = page.locator('canvas[aria-label="Drawing canvas"]');
@@ -298,19 +300,25 @@ test('paint tools respond to dwell, and clearing never does', async ({page}) => 
   await page.mouse.up();
   await page.waitForTimeout(800);
 
-  await dwellAt(page, await centre(page, 'button:has-text("Rose")'));
-  await expect(page.getByRole('heading', {level: 2, name: /Colour/})).toContainText('Rose');
-  await dwellAt(page, await centre(page, 'button:has-text("Neon")'));
-  await expect(page.locator('button:has-text("Neon")')).toHaveAttribute('aria-pressed', 'true');
+  // Open palm brings the tools within reach of the hand.
+  await page.evaluate(() => window.__gestureTest.event({type: 'menu'}));
+  const sheet = page.getByRole('group', {name: 'Drawing tools'});
+  await expect(sheet).toBeVisible();
+  const inSheet = (name: string) => centre(page, `[data-gesture-sheet] button:has-text("${name}")`);
+
+  await dwellAt(page, await inSheet('Rose'));
+  await expect(page.getByRole('heading', {level: 2, name: /Colour/}).first()).toContainText('Rose');
+  await dwellAt(page, await inSheet('Neon'));
+  await expect(sheet.locator('button:has-text("Neon")')).toHaveAttribute('aria-pressed', 'true');
 
   // One sustained hold activates once: staying put must not flip Erase back.
-  await dwellAt(page, await centre(page, 'button:has-text("Erase")'));
-  await expect(page.getByRole('button', {name: 'Draw', exact: true})).toBeVisible();
-  await dwellAt(page, await centre(page, 'button:has-text("Draw")'));
-  await expect(page.getByRole('button', {name: 'Draw', exact: true})).toBeVisible();
+  await dwellAt(page, await inSheet('Erase'));
+  await expect(sheet.getByRole('button', {name: 'Draw', exact: true})).toBeVisible();
+  await dwellAt(page, await inSheet('Draw'));
+  await expect(sheet.getByRole('button', {name: 'Draw', exact: true})).toBeVisible();
 
-  await dwellAt(page, await centre(page, 'button:has-text("Clear")'));
-  await expect(page.getByRole('button', {name: 'Clear it'})).toHaveCount(0);
+  await dwellAt(page, await inSheet('Clear'));
+  await expect(sheet.getByRole('button', {name: 'Clear it'})).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => window.__paintTest.art.current!.strokes.length)).toBe(1);
 });
 
@@ -503,6 +511,111 @@ test('admin pages get no gesture controls and no camera permission', async ({pag
   await expect(guideOf(page)).toHaveCount(0);
   await expect(page.getByRole('checkbox', {name: 'Hand controls'})).toHaveCount(0);
   await expect(page.locator('video')).toHaveCount(0);
+});
+
+test('the whole paper is reachable, and no ink lands outside it', async ({page}) => {
+  await page.goto(`/paint${TEST}`);
+  await ready(page, true);
+
+  // The full range of the hand maps onto the paper, corners included.
+  const corners = await page.evaluate(async () => {
+    const box = document.querySelector('canvas[aria-label="Drawing canvas"]')!.getBoundingClientRect();
+    const seen: {x: number; y: number}[] = [];
+    for (const point of [
+      {x: 0.5, y: 0.5},
+      {x: 0.5, y: 0.98},
+      {x: 0.98, y: 0.98},
+      {x: 0.02, y: 0.02},
+    ]) {
+      // The cursor eases toward the mapped point, so let it settle before reading.
+      for (let i = 0; i < 20; i++) {
+        window.__gestureTest.event({type: 'pointer', point, pose: 'point', selecting: true});
+        await new Promise(resolve => requestAnimationFrame(() => resolve(null)));
+      }
+      const cursor = document.querySelector('[class*="cursor"]') as HTMLElement;
+      const shift = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(cursor.style.transform)!;
+      seen.push({x: Number(shift[1]), y: Number(shift[2])});
+    }
+    return {box: {left: box.left, top: box.top, right: box.right, bottom: box.bottom}, seen};
+  });
+  // Middle of the reach is the middle of the paper.
+  expect(corners.seen[0].y).toBeGreaterThan(corners.box.top);
+  expect(corners.seen[0].y).toBeLessThan(corners.box.bottom);
+  // The bottom of the reach clears the bottom of the paper — the reported bug.
+  expect(corners.seen[1].y).toBeGreaterThan(corners.box.bottom - 8);
+  expect(corners.seen[2].x).toBeGreaterThan(corners.box.right - 8);
+  expect(corners.seen[3].y).toBeLessThan(corners.box.top + 8);
+
+  // Drawing off the paper leaves nothing behind: no line along the edge.
+  const strokes = await page.evaluate(async () => {
+    const wait = () => new Promise(resolve => setTimeout(resolve, 45));
+    const engine = window.__gestureTest.engine.current!;
+    const send = async (x: number, y: number, pinchRatio: number) => {
+      engine.update({point: {x, y}, pose: 'point', pinchRatio}, performance.now());
+      await wait();
+    };
+    for (let i = 0; i < 8; i++) await send(0.3, 0.5, 0.9);
+    for (let i = 0; i < 5; i++) await send(0.3 + i * 0.04, 0.5, 0.12);
+    // Off the bottom of the reach, well past the paper, still pinched.
+    for (let i = 0; i < 8; i++) await send(0.5 + i * 0.06, 1, 0.12);
+    for (let i = 0; i < 4; i++) await send(0.9, 1, 0.95);
+    const art = window.__paintTest.art.current as unknown as {strokes: {points: {x: number; y: number}[]}[]};
+    return art.strokes.map(stroke => ({
+      points: stroke.points.length,
+      maxY: Math.max(...stroke.points.map(point => point.y)),
+      spanX: Math.max(...stroke.points.map(point => point.x)) - Math.min(...stroke.points.map(point => point.x)),
+    }));
+  });
+  // Whatever was drawn stayed on the paper, and nothing raced along the edge.
+  for (const stroke of strokes) {
+    expect(stroke.maxY).toBeLessThanOrEqual(1000);
+    expect(stroke.spanX).toBeLessThan(1400);
+  }
+});
+
+test('the tool sheet carries every control, including clearing and night paper', async ({page}) => {
+  await page.goto(`/paint${TEST}`);
+  await ready(page, true);
+  const canvas = page.locator('canvas[aria-label="Drawing canvas"]');
+  const area = (await canvas.boundingBox())!;
+  await page.mouse.move(area.x + 60, area.y + 60);
+  await page.mouse.down();
+  await page.mouse.move(area.x + 240, area.y + 180, {steps: 8});
+  await page.mouse.up();
+
+  await page.evaluate(() => window.__gestureTest.event({type: 'menu'}));
+  const sheet = page.getByRole('group', {name: 'Drawing tools'});
+  await expect(sheet).toBeVisible();
+  for (const name of ['Erase', 'Undo', 'Zoom in', 'Zoom out', 'Night paper', 'Clear', 'Turn off hand painting']) {
+    await expect(sheet.getByRole('button', {name, exact: true})).toBeVisible();
+  }
+
+  await sheet.getByRole('button', {name: 'Night paper', exact: true}).click();
+  await expect(sheet.getByRole('button', {name: 'White paper', exact: true})).toBeVisible();
+
+  // Clearing from the sheet still asks first.
+  await sheet.getByRole('button', {name: 'Clear', exact: true}).click();
+  await expect(sheet.getByRole('button', {name: 'Keep drawing'})).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__paintTest.art.current!.strokes.length)).toBe(1);
+  await sheet.getByRole('button', {name: 'Clear it'}).click();
+  await expect.poll(() => page.evaluate(() => window.__paintTest.art.current!.strokes.length)).toBe(0);
+});
+
+test('an open sheet takes over the reach so its controls are easy to hit', async ({page}) => {
+  await page.goto(`/paint${TEST}`);
+  await ready(page, true);
+  await page.evaluate(() => window.__gestureTest.event({type: 'menu'}));
+  await expect(page.getByRole('group', {name: 'Drawing tools'})).toBeVisible();
+  const inside = await page.evaluate(() => {
+    const panel = document.querySelector('[data-gesture-sheet]')!.getBoundingClientRect();
+    window.__gestureTest.event({type: 'pointer', point: {x: 0.5, y: 0.5}, pose: 'point', selecting: true});
+    const cursor = document.querySelector('[class*="cursor"]') as HTMLElement;
+    const shift = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(cursor.style.transform)!;
+    const x = Number(shift[1]);
+    const y = Number(shift[2]);
+    return x > panel.left && x < panel.right && y > panel.top && y < panel.bottom;
+  });
+  expect(inside).toBe(true);
 });
 
 test('paint stays inside the viewport on a phone', async ({page}) => {

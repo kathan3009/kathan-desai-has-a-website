@@ -43,6 +43,7 @@ export default function PaintStudio() {
   const {enabled, status, message, pose, supported, preferences, enable, disable, resume, registerSurface, setPreferences} = useGestures();
 
   const frameRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const artRef = useRef<Artboard | null>(null);
   const downloadRef = useRef<HTMLAnchorElement>(null);
@@ -176,10 +177,17 @@ export default function PaintStudio() {
       },
       move(p) {
         const art = artRef.current;
-        const rect = canvasRef.current?.getBoundingClientRect();
-        if (!art || !rect) return;
-        // A stroke rides the edge of the paper; only letting go ends it.
-        art.move(art.point(Math.min(Math.max(p.x, rect.left + 1), rect.right - 1), Math.min(Math.max(p.y, rect.top + 1), rect.bottom - 1)));
+        if (!art) return;
+        if (!this.contains(p)) {
+          // Off the paper: lay down nothing at all.
+          art.end();
+          return;
+        }
+        if (art.active) art.move(art.point(p.x, p.y));
+        else {
+          const {brush, color, size} = toolRef.current;
+          art.begin(art.point(p.x, p.y), brush, color.hex, size);
+        }
       },
       end() {
         artRef.current?.end();
@@ -218,6 +226,16 @@ export default function PaintStudio() {
         const rect = canvasRef.current?.getBoundingClientRect();
         if (!rect) return null;
         return Math.max(10, (toolRef.current.size / 1600) * rect.width);
+      },
+      region() {
+        const target = sheetRef.current ? panelRef.current : frameRef.current;
+        const rect = target?.getBoundingClientRect();
+        if (!rect || !rect.width || !rect.height) return null;
+        // A little room past every edge, so the corners are comfortable to
+        // reach and lifting off the paper is possible without running out.
+        const padX = rect.width * 0.09;
+        const padY = rect.height * 0.09;
+        return {left: rect.left - padX, top: rect.top - padY, width: rect.width + padX * 2, height: rect.height + padY * 2};
       },
     };
     registerSurface(surface);
@@ -453,7 +471,7 @@ export default function PaintStudio() {
 
       {sheet && (
         <div className={styles.sheet}>
-          <div className={styles.sheetPanel} data-gesture-sheet data-gesture-scope role="group" aria-label="Drawing tools">
+          <div ref={panelRef} className={styles.sheetPanel} data-gesture-sheet data-gesture-scope role="group" aria-label="Drawing tools">
             <div className={styles.sheetHead}>
               <span>
                 {brushLabel} · {tool.color.name} · {tool.size} px
@@ -462,7 +480,19 @@ export default function PaintStudio() {
                 Back to the paper
               </button>
             </div>
-            <PaintTools state={state} actions={actions} variant="sheet" />
+            <PaintTools
+              state={state}
+              actions={actions}
+              variant="sheet"
+              clearing={clearing}
+              onClear={() => {
+                artRef.current?.clear();
+                setClearing(false);
+                invalidateFile();
+              }}
+              onKeepDrawing={() => setClearing(false)}
+              onTurnOff={disable}
+            />
           </div>
         </div>
       )}
