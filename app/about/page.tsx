@@ -3,7 +3,7 @@ import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
 
 export const metadata = {
   title: "About",
-  description: "Kathan Desai is the founder of BugBase, building Pentest Copilot in San Francisco.",
+  description: "Kathan Desai founded BugBase and is building Pentest Copilot Enterprise in San Francisco.",
 };
 
 export default function AboutPage() {
@@ -14,7 +14,7 @@ export default function AboutPage() {
         <header>
           <p className="page-kicker">A short version</p>
           <h1>I build things.</h1>
-          <p className="about-lede">I am Kathan, founder of BugBase and the person building Pentest Copilot.</p>
+          <p className="about-lede">I am Kathan, founder of BugBase and the person building Pentest Copilot Enterprise.</p>
         </header>
 
         <div className="about-moments">
@@ -36,7 +36,7 @@ export default function AboutPage() {
             <span>03</span>
             <div>
               <h2>Now, San Francisco.</h2>
-              <p>I am here building Pentest Copilot. New Delhi is still home in another sense. Away from the laptop, I write to understand what I am learning and photograph places that make me slow down.</p>
+              <p>I am here building Pentest Copilot Enterprise. New Delhi is still home in another sense. Away from the laptop, I write to understand what I am learning and photograph places that make me slow down.</p>
             </div>
           </section>
         </div>

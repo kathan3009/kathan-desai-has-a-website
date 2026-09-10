@@ -28,7 +28,7 @@ test('mobile navigation and quiet motion work without horizontal overflow',async
  await menu.click();await expect(menu).toHaveAttribute('aria-expanded','true');await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Writing',exact:true}).click();
  await expect(page).toHaveURL(/\/blogs$/);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
  for(const route of ['/photography','/projects','/about','/work','/skills','/certifications','/faq','/now']){await page.goto(route);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();await expect(page.locator('main h1').first()).toBeVisible();}
- await expect(page.getByRole('heading',{name:'In San Francisco, building Pentest Copilot.'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'In San Francisco, building Pentest Copilot Enterprise.'})).toBeVisible();
 });
 test('real projects, article content and persistent reader settings',async({page})=>{
  test.skip(!real,'Run against Vercel with TEST_REAL_CONTENT=1');

@@ -11,6 +11,8 @@ import Footer from "@/components/Footer";
 import KonamiTerminal from "@/components/KonamiTerminal";
 import SpideyProvider from "@/components/spidey/SpideyProvider";
 import SpideyLayers from "@/components/spidey/SpideyLayers";
+import GestureProvider from "@/components/gestures/GestureProvider";
+import GestureGuide from "@/components/gestures/GestureGuide";
 import { PersonSchema } from "@/components/schema/Person";
 import { OrganizationSchema } from "@/components/schema/Organization";
 
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
     template: "Kathan Desai | %s",
   },
   description:
-    "Kathan Desai is a founder of BugBase, now in San Francisco and building AI products for security. Projects, writing, and photographs.",
+    "Kathan Desai founded BugBase and is in San Francisco building Pentest Copilot Enterprise. Projects, writing, and photographs.",
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -57,12 +59,15 @@ export default function RootLayout({
         </head>
         <body className="antialiased min-h-screen flex flex-col">
           <SpideyProvider>
-            <SpideyLayers />
-            <a href="#main-content" className="skip-link">Skip to content</a>
-            <Header />
-            <main id="main-content" className="flex-1 min-h-0" tabIndex={-1}>{children}</main>
-            <Footer />
-            <KonamiTerminal />
+            <GestureProvider>
+              <SpideyLayers />
+              <a href="#main-content" className="skip-link">Skip to content</a>
+              <Header />
+              <main id="main-content" className="flex-1 min-h-0" tabIndex={-1} data-gesture-scope>{children}</main>
+              <Footer />
+              <KonamiTerminal />
+              <GestureGuide />
+            </GestureProvider>
           </SpideyProvider>
         </body>
     </html>

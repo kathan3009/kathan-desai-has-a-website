@@ -1,2 +1,2 @@
 import {defineConfig} from '@playwright/test';
-export default defineConfig({testDir:'tests',testMatch:'website.spec.ts',fullyParallel:false,workers:1,timeout:45000,use:{baseURL:process.env.SITE_BASE_URL||'http://127.0.0.1:3001',channel:'chrome',viewport:{width:1440,height:1000},screenshot:'only-on-failure'},reporter:'list'});
+export default defineConfig({testDir:'tests',testMatch:/(website|gestures)\.spec\.ts$/,fullyParallel:false,workers:1,timeout:45000,use:{baseURL:process.env.SITE_BASE_URL||'http://127.0.0.1:3001',channel:'chrome',viewport:{width:1440,height:1000},launchOptions:{args:['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream']},screenshot:'only-on-failure'},reporter:'list'});

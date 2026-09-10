@@ -1,0 +1,416 @@
+/*
+  The artwork is a sheet of paper laid into the page, with the tools under it
+  and a narrow margin column beside it — the same hairline editorial system the
+  rest of the site uses, no floating app chrome.
+*/
+
+.shell {
+  max-width: 1280px;
+  margin: auto;
+  padding: clamp(40px, 6vh, 60px) clamp(24px, 5vw, 40px) 70px;
+}
+
+.masthead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 26px;
+}
+.masthead h1 {
+  font-size: clamp(38px, 4.4vw, 54px);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 1.1;
+}
+.masthead p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+  max-width: 46ch;
+  margin-top: 16px;
+}
+.save {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+  font-size: 12px;
+  padding-bottom: 6px;
+}
+
+.studio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 248px;
+  gap: clamp(26px, 3vw, 42px);
+  align-items: start;
+}
+
+/* ── paper ─────────────────────────────────────────────────────────────── */
+
+/* Sized by height, so the tools stay in view on a normal laptop screen. The
+   rail shares the width so it lines up with the edges of the paper. */
+.board {
+  --paper-height: clamp(240px, 46svh, 540px);
+  width: min(100%, calc(var(--paper-height) * 1.6));
+  margin-inline: auto;
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--paint-paper, #ffffff);
+  touch-action: none;
+}
+.frame canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  cursor: crosshair;
+}
+.welcome {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0 22px 20px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--paint-hint, #7d857f);
+  pointer-events: none;
+}
+
+/* ── tool rail ─────────────────────────────────────────────────────────── */
+
+.rail {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 26px 24px;
+  border-top: 1px solid var(--border);
+  padding-top: 22px;
+}
+.group h2 {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-bottom: 12px;
+  letter-spacing: 0;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.swatch {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 46px;
+  padding: 3px 0 6px;
+  border: 0;
+  background: none;
+  font-size: 10px;
+  color: var(--muted);
+  border-radius: 4px;
+}
+.swatch i {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--swatch);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+}
+.swatch[aria-pressed='true'] {
+  color: var(--foreground);
+}
+.swatch[aria-pressed='true'] i {
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--foreground);
+}
+
+.brushes {
+  display: grid;
+  gap: 6px;
+}
+.brush {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 6px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+  color: inherit;
+  font-size: 12px;
+}
+.brush canvas {
+  display: block;
+  width: 76px;
+  height: 22px;
+}
+.brush small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+.brush[aria-pressed='true'] {
+  border-color: var(--border);
+  background: var(--card);
+}
+
+.sizes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.size {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+}
+.size i {
+  display: block;
+  border-radius: 50%;
+  background: currentColor;
+}
+.size[aria-pressed='true'] {
+  background: var(--card);
+  border-color: var(--foreground);
+}
+.slider {
+  display: block;
+  width: 100%;
+  accent-color: var(--accent);
+}
+.sliderLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.button {
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font-size: 12px;
+}
+.button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.button:disabled {
+  color: var(--muted);
+  opacity: 0.55;
+}
+.button[aria-pressed='true'] {
+  background: var(--foreground);
+  border-color: var(--foreground);
+  color: var(--background);
+}
+.danger {
+  color: var(--muted);
+}
+.confirm {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── margin column ─────────────────────────────────────────────────────── */
+
+.margin {
+  position: sticky;
+  top: calc(var(--site-header-height) + 22px);
+  display: grid;
+  gap: 18px;
+  font-size: 12px;
+}
+.preview {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #11150f;
+}
+.preview canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.placeholder {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  padding: 18px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  min-height: 132px;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+.reading {
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+.state {
+  display: block;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-top: 3px;
+}
+.moves {
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+.moves > div {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.moves dd {
+  margin: 0;
+  color: var(--muted);
+}
+.live dt,
+.live dd {
+  color: var(--accent);
+}
+.sessionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+}
+.link {
+  background: none;
+  border: 0;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 5px;
+  padding: 8px 0;
+}
+.link:hover {
+  color: var(--accent);
+}
+.muted {
+  color: var(--muted);
+}
+
+/* ── palm-opened tool sheet ────────────────────────────────────────────── */
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  pointer-events: none;
+}
+.sheetPanel {
+  pointer-events: auto;
+  width: min(620px, 100%);
+  max-height: min(78vh, 660px);
+  overflow: auto;
+  padding: 24px 26px 22px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  background: var(--background);
+  box-shadow: 0 24px 70px -30px rgba(0, 0, 0, 0.55);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  align-content: start;
+  gap: 20px 30px;
+}
+/* The head and the colours read across the whole sheet. */
+.sheetPanel > .sheetHead,
+.sheetPanel > section:first-of-type {
+  grid-column: 1 / -1;
+}
+@supports ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .sheetPanel {
+    background: color-mix(in srgb, var(--background) 86%, transparent);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    backdrop-filter: blur(24px) saturate(1.5);
+  }
+}
+.sheetHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.sheetPanel .swatch {
+  width: 60px;
+}
+.sheetPanel .swatch i {
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 980px) {
+  .studio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .margin {
+    position: static;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    align-items: start;
+  }
+  .preview {
+    max-width: 320px;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: 40px 20px 60px;
+  }
+  .masthead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .save {
+    padding-bottom: 0;
+  }
+  .rail {
+    gap: 22px;
+  }
+  .margin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

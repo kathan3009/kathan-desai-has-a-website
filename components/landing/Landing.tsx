@@ -75,14 +75,14 @@ export default function Landing({projects,posts,photos,available}:LandingData){
           <p className="hero-lead">I started <a href="https://bugbase.in" target="_blank" rel="noreferrer">BugBase</a> and I’m building Pentest Copilot in San Francisco.</p>
           <p className="hero-aside">I like useful technology, clear writing, and getting far enough from a screen to notice the light.</p>
         </div>
-        <div className="hero-bottom"><Link href="https://copilot.bugbase.ai" target="_blank" rel="noreferrer" className="current-project"><span>In focus</span><strong>Pentest Copilot <span aria-hidden>↗</span></strong></Link><PlayfulStatus/></div>
+        <div className="hero-bottom"><Link href="https://copilot.bugbase.ai" target="_blank" rel="noreferrer" className="current-project"><span>In focus</span><strong>Pentest Copilot Enterprise <span aria-hidden>↗</span></strong></Link><PlayfulStatus/></div>
         <div className="hero-clocks"><Clocks reduced={reduced}/></div>
       </div>
     </section>
 
     <section className="landing-chapter landing-bugbase" id="bugbase">
       <div className="landing-content landing-split landing-reveal">
-        <div className="landing-intro"><p className="chapter-label">01 · The company</p><h2>BugBase.</h2><p>I started it with three friends when I was 20. What began in a college dorm is still the main thing I’m building.</p><a className="landing-link" href="https://bugbase.in" target="_blank" rel="noreferrer">Visit BugBase ↗</a></div>
+        <div className="landing-intro"><p className="chapter-label">01 · The company</p><h2>BugBase.</h2><p>I started it with three friends when I was 20. What began in a college dorm became the company behind Pentest Copilot Enterprise, which is where my days go now.</p><a className="landing-link" href="https://bugbase.in" target="_blank" rel="noreferrer">Visit BugBase ↗</a></div>
         <div className="company-proof" aria-label="BugBase company focus"><span>Security programs</span><strong>Discover.<br/>Validate.<br/>Resolve.</strong><small>Founder · 2021 to now</small></div>
       </div>
     </section>
