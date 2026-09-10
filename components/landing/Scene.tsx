@@ -35,14 +35,12 @@ const fragment = `
     vec3 dusk = photograph(uDusk, 1.333333, uv, zoom);
     vec3 night = photograph(uNight, 1.777778, uv, 1.035 + .018 * p);
     vec3 monastery = photograph(uMonastery, .5625, uv, 1.02);
-    float toNight = smoothstep(1.68, 2., p);
-    float toMonastery = smoothstep(2.68, 3., p);
-    float toEvening = smoothstep(3.68, 4., p);
+    float toNight = smoothstep(1.55, 2.1, p);
+    float toMonastery = smoothstep(3.45, 4., p);
     vec3 color = mix(dusk, night, toNight);
     color = mix(color, monastery, toMonastery);
-    color = mix(color, dusk * .62, toEvening);
     float shade = mix(.98, .65, smoothstep(.55, 1., p));
-    shade = mix(shade, .46, toMonastery * (1. - toEvening));
+    shade = mix(shade, .52, toMonastery);
     gl_FragColor = vec4(color * shade, 1.);
     #include <colorspace_fragment>
   }

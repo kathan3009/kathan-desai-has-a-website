@@ -1,337 +1,52 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useId } from "react";
-import Image from "next/image";
+/* Remote originals keep their natural dimensions in the visual story and lightbox. */
+/* eslint-disable @next/next/no-img-element */
+
+import {useState,useRef,useEffect,useCallback,useId} from "react";
 import styles from "./photography/photography.module.css";
 
-export type PhotoItem = {
-  _id: string;
-  image: string;
-  caption: string;
-  category?: string;
-};
+export type PhotoItem={_id:string;image:string;caption:string;category?:string};
 
-type ViewMode = "list" | "grid";
-const EAGER_GRID_COUNT = 6;
-
-function writeHistory(method: "push" | "replace", state: Record<string, unknown>, url: URL) {
-  // Call the native History method so a query-only lightbox change does not
-  // enter the app-wide page transition. The gallery owns this URL state.
-  if (method === "push") {
-    History.prototype.pushState.call(window.history, state, "", url);
-  } else {
-    History.prototype.replaceState.call(window.history, state, "", url);
-  }
+function writeHistory(method:"push"|"replace",state:Record<string,unknown>,url:URL){
+  if(method==="push")History.prototype.pushState.call(window.history,state,"",url);
+  else History.prototype.replaceState.call(window.history,state,"",url);
 }
 
-// Keep this aligned with next.config.ts; other sources use their original URL.
-function isOptimizable(url: string): boolean {
-  if (url.startsWith("/") && !url.startsWith("//")) return true;
-  try {
-    const u = new URL(url);
-    return u.protocol === "https:" && (
-      u.hostname === "pub-e6b13b1038d84eb5b4a3c0cf7bf0e50a.r2.dev" ||
-      (u.hostname === "img.youtube.com" && u.pathname.startsWith("/vi/"))
-    );
-  } catch {
-    return false;
-  }
+export default function PhotographyGallery({photos}:{photos:PhotoItem[]}){
+  const [selectedPhotoId,setSelectedPhotoId]=useState<string|null>(null);
+  useEffect(()=>{const sync=()=>setSelectedPhotoId(new URL(window.location.href).searchParams.get("photo"));sync();window.addEventListener("popstate",sync);return()=>window.removeEventListener("popstate",sync);},[]);
+  const closeLightbox=useCallback(()=>{if(window.history.state?.photographyGallery)window.history.back();else{const url=new URL(window.location.href);url.searchParams.delete("photo");writeHistory("replace",{...(window.history.state||{}),photographyGallery:false},url);setSelectedPhotoId(null);}},[]);
+  const lightboxIndex=photos.findIndex(photo=>photo._id===selectedPhotoId);
+  const openPhoto=(index:number)=>{const url=new URL(window.location.href);url.searchParams.set("photo",photos[index]._id);writeHistory("push",{...(window.history.state||{}),photographyGallery:true},url);setSelectedPhotoId(photos[index]._id);};
+  const navigatePhoto=(index:number)=>{const url=new URL(window.location.href);url.searchParams.set("photo",photos[index]._id);writeHistory("replace",{...(window.history.state||{}),photographyGallery:!!window.history.state?.photographyGallery},url);setSelectedPhotoId(photos[index]._id);};
+  if(!photos.length)return <p className={styles.empty}>No photographs yet.</p>;
+  const category=photos.find(photo=>photo.category?.trim())?.category?.trim()||"The mountains";
+  return <section className={styles.gallery} aria-labelledby="photo-story-title">
+    <header className={styles.storyHeader}><div><p>Visual story · {String(photos.length).padStart(2,'0')} frames</p><h2 id="photo-story-title">{category}</h2></div><p>Cold nights, long roads, monasteries, and the last light before dark.</p></header>
+    <div className={styles.storyList}>{photos.map((photo,index)=><PhotoCard key={photo._id} photo={photo} index={index} onClick={()=>openPhoto(index)}/>)}</div>
+    {lightboxIndex>=0&&<Lightbox photos={photos} currentIndex={lightboxIndex} onClose={closeLightbox} onNavigate={navigatePhoto}/>}
+  </section>;
 }
 
-export default function PhotographyGallery({ photos }: { photos: PhotoItem[] }) {
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("");
-  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const syncFromUrl = () => setSelectedPhotoId(new URL(window.location.href).searchParams.get("photo"));
-    syncFromUrl();
-    window.addEventListener("popstate", syncFromUrl);
-    return () => window.removeEventListener("popstate", syncFromUrl);
-  }, []);
-
-  const closeLightbox = useCallback(() => {
-    if (window.history.state?.photographyGallery) {
-      window.history.back();
-    } else {
-      // A landing-page or shared link should close here, not leave the gallery.
-      const url = new URL(window.location.href);
-      url.searchParams.delete("photo");
-      writeHistory("replace", { ...(window.history.state || {}), photographyGallery: false }, url);
-      setSelectedPhotoId(null);
-    }
-  }, []);
-  const searchId = useId();
-  const categoryId = useId();
-  const resultsId = useId();
-  const categories = [...new Set(photos.map((p) => p.category?.trim()).filter((c): c is string => !!c))].sort();
-  const search = query.trim().toLocaleLowerCase();
-  const visiblePhotos = photos.filter((p) =>
-    (!category || p.category?.trim() === category) &&
-    (!search || `${p.caption} ${p.category || ""}`.toLocaleLowerCase().includes(search)),
-  );
-  const filtered = !!(query || category);
-  // A shared link still resolves when the current local filters hide its photo.
-  const lightboxPhotos = visiblePhotos.some((p) => p._id === selectedPhotoId) ? visiblePhotos : photos;
-  const lightboxIndex = lightboxPhotos.findIndex((p) => p._id === selectedPhotoId);
-
-  const openPhoto = (index: number) => {
-    const url = new URL(window.location.href);
-    const id = visiblePhotos[index]._id;
-    url.searchParams.set("photo", id);
-    writeHistory("push", { ...(window.history.state || {}), photographyGallery: true }, url);
-    setSelectedPhotoId(id);
-  };
-  const navigatePhoto = (index: number) => {
-    const url = new URL(window.location.href);
-    const id = lightboxPhotos[index]._id;
-    url.searchParams.set("photo", id);
-    writeHistory("replace", { ...(window.history.state || {}), photographyGallery: !!window.history.state?.photographyGallery }, url);
-    setSelectedPhotoId(id);
-  };
-
-  if (!photos.length) {
-    return <p className={styles.empty}>No photos yet. Check back soon.</p>;
-  }
-
-  return (
-    <section className={styles.gallery} aria-label="Photo collection">
-      <div className={styles.toolbar}>
-        <div className={styles.filters}>
-          <label className={styles.field} htmlFor={searchId}>
-            <span>Search photographs</span>
-            <input id={searchId} type="search" placeholder="Caption or category" value={query}
-              aria-controls={resultsId} onChange={(e) => setQuery(e.target.value)} />
-          </label>
-          {categories.length > 0 && (
-            <label className={styles.field} htmlFor={categoryId}>
-              <span>Category</span>
-              <select id={categoryId} value={category} aria-controls={resultsId} onChange={(e) => setCategory(e.target.value)}>
-                <option value="">All categories</option>
-                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </label>
-          )}
-        </div>
-        <div className={styles.viewToggle} role="group" aria-label="Gallery view">
-          <button type="button" aria-pressed={viewMode === "list"} onClick={() => setViewMode("list")}>List</button>
-          <button type="button" aria-pressed={viewMode === "grid"} onClick={() => setViewMode("grid")}>Grid</button>
-        </div>
-      </div>
-      <div className={styles.results}>
-        <p role="status" aria-live="polite" aria-atomic="true">
-          {filtered ? `${visiblePhotos.length} of ${photos.length}` : photos.length} {photos.length === 1 ? "photograph" : "photographs"}
-        </p>
-        {filtered && <button type="button" className={styles.textLink} onClick={() => { setQuery(""); setCategory(""); }}>Clear filters</button>}
-      </div>
-      <div id={resultsId}>
-        {!visiblePhotos.length ? (
-          <div className={styles.empty}><h2>No matching photographs.</h2><p>Try another caption or category, or clear the filters.</p></div>
-        ) : viewMode === "list" ? (
-          <CarouselView key={`list-${category}-${query}`} photos={visiblePhotos} onPhotoClick={openPhoto} />
-        ) : (
-          <div className={styles.grid}>
-            {visiblePhotos.map((photo, index) => (
-              <PhotoCard key={photo._id} photo={photo} index={index} eager={index < EAGER_GRID_COUNT} onClick={() => openPhoto(index)} />
-            ))}
-          </div>
-        )}
-      </div>
-      {lightboxIndex >= 0 && (
-        <Lightbox photos={lightboxPhotos} currentIndex={lightboxIndex} onClose={closeLightbox} onNavigate={navigatePhoto} />
-      )}
-    </section>
-  );
+function PhotoCard({photo,index,onClick}:{photo:PhotoItem;index:number;onClick:()=>void}){
+  const [failed,setFailed]=useState(false);
+  return <figure className={styles.photo}><button type="button" className={styles.photoButton} onClick={onClick} aria-label={`Open photograph ${index+1}${photo.caption?`: ${photo.caption}`:""}`} aria-haspopup="dialog">
+    {!failed&&<img src={photo.image} alt={photo.caption||`Photograph ${index+1}`} loading={index<2?"eager":"lazy"} fetchPriority={index===0?"high":"auto"} onError={()=>setFailed(true)}/>}
+    {failed&&<span className={styles.imageError}>Preview unavailable. Open photograph.</span>}<span className={styles.expand} aria-hidden="true">Open <span>↗</span></span>
+  </button>{(photo.caption||photo.category)&&<figcaption className={styles.caption}><p>{photo.caption||`Photograph ${index+1}`}</p>{photo.category&&<span>{photo.category}</span>}</figcaption>}</figure>;
 }
 
-function PhotoCard({ photo, index, eager, onClick }: { photo: PhotoItem; index: number; eager: boolean; onClick: () => void }) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const [visible, setVisible] = useState(eager);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    if (eager) return;
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setVisible(true);
-        observer.disconnect();
-      }
-    }, { rootMargin: "300px" });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [eager]);
-
-  return (
-    <figure className={styles.photo}>
-      <button ref={ref} type="button" className={styles.photoButton} onClick={onClick}
-        aria-label={`Open photograph ${index + 1}${photo.caption ? `: ${photo.caption}` : ""}`} aria-haspopup="dialog">
-        {(visible || eager) && !failed && <Image src={photo.image} alt={photo.caption || `Photograph ${index + 1}`} fill
-          sizes="(max-width: 600px) 90vw, (max-width: 1000px) 45vw, 420px"
-          className={styles.thumbnail} priority={eager} unoptimized={!isOptimizable(photo.image)} onError={() => setFailed(true)} />}
-        {failed && <span className={styles.imageError}>Preview unavailable. Open photograph.</span>}
-        <span className={styles.expand} aria-hidden="true">View photograph <span>↗</span></span>
-      </button>
-      {(photo.caption || photo.category) && <figcaption className={styles.caption}>
-        {photo.caption && <p>{photo.caption}</p>}
-        {photo.category && <span>{photo.category}</span>}
-      </figcaption>}
-    </figure>
-  );
+function Lightbox({photos,currentIndex,onClose,onNavigate}:{photos:PhotoItem[];currentIndex:number;onClose:()=>void;onNavigate:(index:number)=>void}){
+  const dialogRef=useRef<HTMLDialogElement>(null);const titleId=useId();const photo=photos[currentIndex];const goPrev=()=>onNavigate((currentIndex-1+photos.length)%photos.length);const goNext=()=>onNavigate((currentIndex+1)%photos.length);
+  useEffect(()=>{const dialog=dialogRef.current;const opener=document.activeElement instanceof HTMLElement?document.activeElement:null;const overflow=document.body.style.overflow;dialog?.showModal();document.body.style.overflow="hidden";return()=>{dialog?.close();document.body.style.overflow=overflow;opener?.focus({preventScroll:true});};},[]);
+  useEffect(()=>{if(photos.length<2)return;const adjacent=new Set([(currentIndex+1)%photos.length,(currentIndex-1+photos.length)%photos.length]);const links=[...adjacent].map(index=>{const link=document.createElement("link");link.rel="preload";link.as="image";link.href=photos[index].image;document.head.appendChild(link);return link;});return()=>links.forEach(link=>link.remove());},[currentIndex,photos]);
+  return <dialog ref={dialogRef} className={styles.lightbox} aria-labelledby={titleId} onCancel={event=>{event.preventDefault();onClose();}} onClick={event=>{if(event.target===event.currentTarget)onClose();}} onKeyDown={event=>{if(event.key==="Tab"){const controls=event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href]');const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}return;}if(event.altKey||event.ctrlKey||event.metaKey)return;if(event.key==="ArrowLeft"){event.preventDefault();goPrev();}if(event.key==="ArrowRight"){event.preventDefault();goNext();}}}>
+    <div className={styles.lightboxBar}><p id={titleId}>Photograph {currentIndex+1} of {photos.length}</p><button type="button" className={styles.closeButton} onClick={onClose} autoFocus>Close <span aria-hidden="true">×</span></button></div>
+    <div className={styles.lightboxStage} onClick={event=>{if(event.target===event.currentTarget)onClose();}}><OriginalPhoto key={photo._id} photo={photo}/></div>
+    <div className={styles.lightboxFooter}><div className={styles.lightboxCaption} aria-live="polite" aria-atomic="true"><p>{photo.caption||`Photograph ${currentIndex+1}`}</p>{photo.category&&<span>{photo.category}</span>}<SharePhotoLink key={photo._id}/><a href={photo.image} target="_blank" rel="noopener noreferrer" className={styles.textLink}>Open full-resolution image <span className={styles.srOnly}>(opens in a new tab)</span></a></div>{photos.length>1&&<div className={styles.lightboxNavigation} role="group" aria-label="Photo navigation"><button type="button" className={styles.iconButton} aria-label="Previous photo" onClick={goPrev}>←</button><span aria-hidden="true">{currentIndex+1} / {photos.length}</span><button type="button" className={styles.iconButton} aria-label="Next photo" onClick={goNext}>→</button></div>}</div>
+  </dialog>;
 }
 
-function CarouselView({ photos, onPhotoClick }: { photos: PhotoItem[]; onPhotoClick: (index: number) => void }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ atStart: true, atEnd: false });
-  const carouselId = useId();
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const update = () => setPosition({ atStart: el.scrollLeft <= 2, atEnd: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2 });
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-    el.addEventListener("scroll", update, { passive: true });
-    return () => { observer.disconnect(); el.removeEventListener("scroll", update); };
-  }, []);
-
-  const scroll = (direction: number) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const card = el.firstElementChild as HTMLElement | null;
-    const distance = card ? card.offsetWidth + parseFloat(getComputedStyle(el).columnGap || "0") : el.clientWidth;
-    el.scrollBy({ left: direction * distance, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
-  };
-
-  return (
-    <div>
-      <div className={styles.carouselControls}>
-        <p>Scroll to explore. Select a photograph to open it.</p>
-        <div role="group" aria-label="Scroll photographs">
-          <button type="button" className={styles.iconButton} aria-label="Scroll to previous photographs" aria-controls={carouselId} disabled={position.atStart} onClick={() => scroll(-1)}>←</button>
-          <button type="button" className={styles.iconButton} aria-label="Scroll to next photographs" aria-controls={carouselId} disabled={position.atEnd} onClick={() => scroll(1)}>→</button>
-        </div>
-      </div>
-      <div id={carouselId} ref={scrollRef} className={styles.carousel} role="region" aria-label="Photographs in a horizontal list" tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.target !== e.currentTarget) return;
-          if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); scroll(e.key === "ArrowLeft" ? -1 : 1); }
-        }}>
-        {photos.map((photo, index) => <PhotoCard key={photo._id} photo={photo} index={index} eager={index < 3} onClick={() => onPhotoClick(index)} />)}
-      </div>
-    </div>
-  );
-}
-
-function Lightbox({ photos, currentIndex, onClose, onNavigate }: {
-  photos: PhotoItem[]; currentIndex: number; onClose: () => void; onNavigate: (index: number) => void;
-}) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
-  const photo = photos[currentIndex];
-  const goPrev = () => onNavigate((currentIndex - 1 + photos.length) % photos.length);
-  const goNext = () => onNavigate((currentIndex + 1) % photos.length);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
-    dialog?.showModal();
-    document.body.style.overflow = "hidden";
-    return () => {
-      dialog?.close();
-      document.body.style.overflow = previousOverflow;
-      opener?.focus({ preventScroll: true });
-    };
-  }, []);
-
-  useEffect(() => {
-    if (photos.length < 2) return;
-    const adjacent = new Set([(currentIndex + 1) % photos.length, (currentIndex - 1 + photos.length) % photos.length]);
-    const links = [...adjacent].map((index) => {
-      const link = document.createElement("link");
-      link.rel = "preload";
-      link.as = "image";
-      link.href = photos[index].image;
-      document.head.appendChild(link);
-      return link;
-    });
-    return () => links.forEach((link) => link.remove());
-  }, [currentIndex, photos]);
-
-  return (
-    <dialog ref={dialogRef} className={styles.lightbox} aria-labelledby={titleId}
-      onCancel={(e) => { e.preventDefault(); onClose(); }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      onKeyDown={(e) => {
-        if (e.key === "Tab") {
-          const controls = e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex="0"]');
-          const first = controls[0];
-          const last = controls[controls.length - 1];
-          if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last?.focus();
-          } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first?.focus();
-          }
-          return;
-        }
-        if (e.altKey || e.ctrlKey || e.metaKey) return;
-        if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); }
-        if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
-      }}>
-      <div className={styles.lightboxBar}>
-        <p id={titleId}>Photograph {currentIndex + 1} of {photos.length}</p>
-        <button type="button" className={styles.closeButton} onClick={onClose} autoFocus>Close <span aria-hidden="true">×</span></button>
-      </div>
-      <div className={styles.lightboxStage} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-        <OriginalPhoto key={photo._id} photo={photo} />
-      </div>
-      <div className={styles.lightboxFooter}>
-        <div className={styles.lightboxCaption} aria-live="polite" aria-atomic="true">
-          <p>{photo.caption || `Photograph ${currentIndex + 1}`}</p>
-          {photo.category && <span>{photo.category}</span>}
-          <SharePhotoLink key={photo._id} />
-          <a href={photo.image} target="_blank" rel="noopener noreferrer" className={styles.textLink}>Open full-resolution image <span className={styles.srOnly}>(opens in a new tab)</span></a>
-        </div>
-        {photos.length > 1 && <div className={styles.lightboxNavigation} role="group" aria-label="Photo navigation">
-          <button type="button" className={styles.iconButton} aria-label="Previous photo" onClick={goPrev}>←</button>
-          <span aria-hidden="true">{currentIndex + 1} / {photos.length}</span>
-          <button type="button" className={styles.iconButton} aria-label="Next photo" onClick={goNext}>→</button>
-        </div>}
-      </div>
-    </dialog>
-  );
-}
-
-function OriginalPhoto({ photo }: { photo: PhotoItem }) {
-  const [failed, setFailed] = useState(false);
-  return failed ? <p className={styles.imageError} role="status">This photograph could not load. Try opening the full-resolution image below.</p> : (
-    // The lightbox deliberately loads the original, without Next image resizing.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={photo.image} alt={photo.caption || "Photograph"} className={styles.original} draggable={false} onError={() => setFailed(true)} />
-  );
-}
-
-function SharePhotoLink() {
-  const [status, setStatus] = useState("");
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setStatus("Photo link copied.");
-    } catch {
-      setStatus("Copy the address from your browser to share this photograph.");
-    }
-  };
-
-  return (
-    <div>
-      <button type="button" className={styles.textLink} onClick={copyLink}>Copy photo link</button>
-      <span className={styles.shareStatus} role="status">{status}</span>
-    </div>
-  );
-}
+function OriginalPhoto({photo}:{photo:PhotoItem}){const [failed,setFailed]=useState(false);return failed?<p className={styles.imageError} role="status">This photograph could not load. Try the full-resolution link below.</p>:<img src={photo.image} alt={photo.caption||"Photograph"} className={styles.original} draggable={false} onError={()=>setFailed(true)}/>;}
+function SharePhotoLink(){const [status,setStatus]=useState("");const copy=async()=>{try{await navigator.clipboard.writeText(window.location.href);setStatus("Photo link copied.");}catch{setStatus("Copy the address from your browser to share this photograph.");}};return <div><button type="button" className={styles.textLink} onClick={copy}>Copy photo link</button><span className={styles.shareStatus} role="status">{status}</span></div>;}

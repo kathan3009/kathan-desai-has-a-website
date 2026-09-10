@@ -18,7 +18,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 const getPost = cache(async (slug: string) => {
   const conn = await dbConnect();
-  return conn ? Blog.findOne({ slug }) : null;
+  return conn ? Blog.findOne({ slug, isDraft: { $ne: true } }) : null;
 });
 
 export async function generateMetadata({ params }: Props) {

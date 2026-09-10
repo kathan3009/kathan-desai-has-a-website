@@ -7,7 +7,7 @@ import { ADMIN_PATH } from "@/lib/adminPath";
 import { adminRequest, errorMessage } from "@/components/admin/api";
 
 const base = `/${ADMIN_PATH}`;
-const sections = [["", "Overview"], ["blog", "Writing"], ["projects", "Projects"], ["photos", "Photographs"], ["about", "About"], ["work", "Work"], ["skills", "Skills"], ["certifications", "Certifications"], ["faq", "FAQ"], ["uploads", "Uploads"]];
+const sections = [["", "Overview"], ["blog", "Writing"], ["projects", "Projects"], ["photos", "Photographs"], ["uploads", "Uploads"], ["work", "Work"], ["skills", "Skills"], ["certifications", "Certifications"], ["faq", "FAQ"]];
 
 export default function AdminNav() {
   const pathname = usePathname();

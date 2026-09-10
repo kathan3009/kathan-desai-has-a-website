@@ -104,7 +104,7 @@ export function ReaderShell({ children }: { children: ReactNode }) {
             <summary ref={summary} aria-controls="reading-settings" aria-keyshortcuts="Alt+R">
               <span className={styles.aa} aria-hidden="true">Aa</span> Reading settings
             </summary>
-            <section id="reading-settings" className={styles.settingsPanel} aria-labelledby="reading-settings-title">
+            <section id="reading-settings" className={styles.settingsPanel} role="dialog" aria-modal="false" aria-labelledby="reading-settings-title">
               <div className={styles.settingsHeading}>
                 <h2 id="reading-settings-title">Make yourself comfortable</h2>
                 <button type="button" aria-label="Close reading settings" onClick={() => {
@@ -114,7 +114,7 @@ export function ReaderShell({ children }: { children: ReactNode }) {
               </div>
               <fieldset><legend>Page colour</legend><div className={styles.choices}>
                 {(["paper", "sepia", "dark"] as const).map(theme => (
-                  <button type="button" key={theme} aria-pressed={prefs.theme === theme} onClick={() => update({ theme })}>
+                  <button type="button" key={theme} aria-label={`Use ${theme} page colour`} aria-pressed={prefs.theme === theme} onClick={() => update({ theme })}>
                     <span className={styles.swatch} data-swatch={theme} aria-hidden="true" />{theme[0].toUpperCase() + theme.slice(1)}
                   </button>
                 ))}
@@ -125,14 +125,14 @@ export function ReaderShell({ children }: { children: ReactNode }) {
                 <button type="button" aria-label="Larger text" disabled={prefs.size >= 30} onClick={() => update({ size: Math.min(30, prefs.size + 2) })}>+</button>
               </div></div>
               <fieldset><legend>Typeface</legend><div className={styles.choices}>
-                <button type="button" aria-pressed={prefs.typeface === "serif"} onClick={() => update({ typeface: "serif" })}>Serif</button>
-                <button type="button" aria-pressed={prefs.typeface === "sans"} onClick={() => update({ typeface: "sans" })}>Sans serif</button>
+                <button type="button" aria-label="Use serif typeface" aria-pressed={prefs.typeface === "serif"} onClick={() => update({ typeface: "serif" })}>Serif</button>
+                <button type="button" aria-label="Use sans serif typeface" aria-pressed={prefs.typeface === "sans"} onClick={() => update({ typeface: "sans" })}>Sans serif</button>
               </div></fieldset>
               <fieldset><legend>Column width</legend><div className={styles.choices}>
-                {(["narrow", "standard", "wide"] as const).map(width => <button type="button" key={width} aria-pressed={prefs.width === width} onClick={() => update({ width })}>{width[0].toUpperCase() + width.slice(1)}</button>)}
+                {(["narrow", "standard", "wide"] as const).map(width => <button type="button" key={width} aria-label={`Use ${width} reading column`} aria-pressed={prefs.width === width} onClick={() => update({ width })}>{width[0].toUpperCase() + width.slice(1)}</button>)}
               </div></fieldset>
               <fieldset><legend>Line spacing</legend><div className={styles.choices}>
-                {(["compact", "relaxed", "spacious"] as const).map(spacing => <button type="button" key={spacing} aria-pressed={prefs.spacing === spacing} onClick={() => update({ spacing })}>{spacing[0].toUpperCase() + spacing.slice(1)}</button>)}
+                {(["compact", "relaxed", "spacious"] as const).map(spacing => <button type="button" key={spacing} aria-label={`Use ${spacing} line spacing`} aria-pressed={prefs.spacing === spacing} onClick={() => update({ spacing })}>{spacing[0].toUpperCase() + spacing.slice(1)}</button>)}
               </div></fieldset>
               <button type="button" className={styles.reset} onClick={() => update(defaultPreferences)}>Reset preferences</button>
               <p className={styles.settingsNote} role="status">{saveFailed ? "Applied for this visit. Your browser could not save preferences." : "Preferences are saved on this device."}</p>

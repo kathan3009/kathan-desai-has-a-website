@@ -76,16 +76,32 @@
 .empty h2 { font-size: 1.5rem; margin-bottom: .75rem; }
 .empty p { color: var(--reading-muted); margin-bottom: 1rem; }
 .empty a { text-decoration: underline; }
+.eyebrow { font-size: .72rem !important; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1.25rem; }
+.writingControls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-block: 1px solid var(--reading-border); padding: 1rem 0; margin-bottom: 2rem; color: var(--reading-muted); font-size: .78rem; }
+.topicPicker { position: relative; }
+.topicPicker > summary { min-height: 44px; display: flex; align-items: center; list-style: none; color: var(--reading-ink); }
+.topicPicker > summary::-webkit-details-marker { display: none; }
+.topicPicker > summary::after { content: "⌄"; margin-left: .55rem; color: var(--reading-muted); }
+.topicPicker[open] > summary::after { transform: rotate(180deg); }
+.topicPicker nav { position: absolute; z-index: 20; top: calc(100% + .5rem); right: 0; min-width: 13rem; padding: .5rem; border: 1px solid var(--reading-border); border-radius: .75rem; background: var(--reading-paper); box-shadow: 0 16px 40px #00000014; }
+.topicPicker nav a { display: block; padding: .7rem .8rem; border-radius: .45rem; }
+.topicPicker nav a[aria-current] { background: var(--reading-card); font-weight: 600; }
+.archive { margin-top: 2.5rem; }
+.surface .archive > h2 { font: 500 .8rem/1.5 var(--font-manrope, "Manrope"), system-ui, sans-serif; color: var(--reading-muted); letter-spacing: .02em; margin-bottom: .5rem; }
+.archive .post { display: block; padding: 1.6rem 0; }
+.archive .post h2 { max-width: 45rem; font-size: 1.45rem; }
+.archive .excerpt { max-width: 45rem; }
 .reader { padding: 0 1.5rem 5rem; }
 .toolbar { position: sticky; top: var(--site-header-height, 84px); z-index: 40; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .toolbar { width: min(100%, 64rem); margin: 0 auto; padding: .8rem 0; background: var(--reading-paper); border-bottom: 1px solid var(--reading-border); font-size: .8rem; }
 .backLink { display: inline-flex; min-height: 44px; align-items: center; gap: .6rem; }
 .settings { position: relative; }
+.settings[open] { width: min(23rem, calc(100% - 7rem)); }
 .settings > summary { display: flex; align-items: center; gap: .6rem; min-height: 44px; border-radius: .4rem; padding: .5rem .75rem; list-style: none; }
 .settings > summary::-webkit-details-marker { display: none; }
 .settings[open] > summary, .settings > summary:hover { background: var(--reading-card); }
 .aa { font-family: var(--font-newsreader, "Newsreader"), Georgia, serif; font-size: 1.5rem; line-height: 1; }
-.settingsPanel { position: absolute; top: calc(100% + .6rem); right: 0; width: min(23rem, calc(100vw - 3rem)); max-height: calc(100dvh - var(--site-header-height, 84px) - 6rem); overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem; background: var(--reading-paper); border: 1px solid var(--reading-border); border-radius: .75rem; box-shadow: 0 12px 36px #00000018; }
+.settingsPanel { position: static; width: 100%; max-height: calc(100dvh - var(--site-header-height, 84px) - 7rem); margin: .5rem 0 .25rem; overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem; background: var(--reading-paper); border: 1px solid var(--reading-border); border-radius: .9rem; box-shadow: 0 18px 50px #0000001a; }
 .settingsHeading { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-bottom: 1rem; }
 .surface .settingsHeading h2 { font: 600 .95rem/1.5 var(--font-manrope, "Manrope"), system-ui, sans-serif; letter-spacing: -.01em; }
 .settingsHeading button, .sizeControls button { min-width: 44px; min-height: 44px; border: 1px solid var(--reading-border); border-radius: .4rem; font-size: 1.25rem; }
@@ -173,6 +189,8 @@
   .toolbar { gap: .5rem; font-size: .75rem; }
   .settings > summary { padding-inline: .4rem; gap: .4rem; }
   .settingsPanel { padding: 1rem; width: min(23rem, calc(100vw - 2.5rem)); }
+  .writingControls { align-items: flex-start; }
+  .topicPicker nav { max-height: 60dvh; overflow-y: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   .surface *, .surface *::before, .surface *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

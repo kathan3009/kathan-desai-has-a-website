@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const conn = await dbConnect();
     if (conn) {
-      const posts = await Blog.find().select("slug updatedAt");
+      const posts = await Blog.find({ isDraft: { $ne: true } }).select("slug updatedAt");
       const projects=await Project.find().select("updatedAt");
       staticPages.push(...projects.map(p=>({url:`${baseUrl}/projects/${p._id}`,lastModified:new Date(p.updatedAt),changeFrequency:"monthly" as const,priority:0.7})));
       blogUrls = posts.map((p) => ({

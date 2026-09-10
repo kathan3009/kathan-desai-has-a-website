@@ -18,7 +18,7 @@ export async function POST(
     if (!conn) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
 
     const result = await Blog.findOneAndUpdate(
-      { slug },
+      { slug, isDraft: { $ne: true } },
       { $inc: { readCount: 1 } },
       { new: true }
     );

@@ -19,6 +19,7 @@ const BlogSchema = new mongoose.Schema(
     audioUrl: { type: String, default: "" },
     readCount: { type: Number, default: 0 },
     isTopStory: { type: Boolean, default: false },
+    isDraft: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

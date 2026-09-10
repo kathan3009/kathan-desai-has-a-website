@@ -36,7 +36,7 @@ export default function CollectionEditor({ config }: { config: CollectionConfig 
   return <section>
     <header className="admin-heading"><div><h1>{config.title}</h1><p>{config.description}</p></div></header>
     <Feedback error={collection.error} notice={collection.notice} />
-    <form ref={editor} onSubmit={submit} onChangeCapture={collection.clearNotice} className="admin-form">
+    <form id="editor" ref={editor} onSubmit={submit} onChangeCapture={collection.clearNotice} className="admin-form">
       <div className="admin-form-heading"><h2>{editing ? `Edit ${config.singular}` : `Add ${config.singular}`}</h2><span>{dirty ? "Unsaved changes" : ""}</span></div>
       <fieldset disabled={collection.pending} className="admin-fields">
         {config.fields.map(field => <label key={field.key} className={field.kind === "textarea" ? "admin-field admin-field-wide" : "admin-field"}>
