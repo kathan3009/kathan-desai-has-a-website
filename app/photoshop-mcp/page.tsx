@@ -8,7 +8,7 @@ const DMG_ARM = `${RELEASE}/download/Photoshop-MCP-1.2.0-arm64.dmg`;
 const DMG_X64 = `${RELEASE}/download/Photoshop-MCP-1.2.0-x64.dmg`;
 const REPO = "https://github.com/kathan3009/photoshop-mcp";
 const VIDEO = "https://github.com/kathan3009/photoshop-mcp/releases/download/v1.2.0/launch-video.mp4";
-const POSTER = "/images/photoshop-mcp/app-overview.jpg";
+const POSTER = "/images/photoshop-mcp/poster.jpg";
 
 export const metadata: Metadata = {
   title: "Photoshop MCP",
@@ -55,7 +55,7 @@ export default function PhotoshopMcpPage() {
           </p>
         </header>
 
-        <section className="psmcp-video" aria-label="Launch video">
+        <section className="psmcp-video" aria-label="Launch film, 24 seconds, with voiceover">
           <video controls playsInline preload="metadata" poster={POSTER}>
             <source src={VIDEO} type="video/mp4" />
           </video>
