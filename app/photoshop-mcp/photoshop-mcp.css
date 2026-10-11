@@ -1,0 +1,28 @@
+.psmcp { max-width: 1020px; }
+.psmcp-hero { max-width: 820px; }
+.psmcp-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+.psmcp-btn { display: inline-block; padding: 13px 20px; border: 1px solid var(--foreground); border-radius: 8px; font-size: 14px; text-decoration: none; color: var(--foreground); }
+.psmcp-btn.primary { background: var(--foreground); color: var(--background); }
+.psmcp-btn.ghost { border-color: var(--border); color: var(--muted); }
+.psmcp-btn:hover { opacity: .85; }
+.psmcp-fineprint { margin-top: 16px; font-size: 12px; color: var(--muted); line-height: 1.7; max-width: 640px; }
+.psmcp-video { margin: 56px 0 10px; }
+.psmcp-video video { width: 100%; aspect-ratio: 16 / 9; background: #0e1016; border-radius: 12px; border: 1px solid var(--border); display: block; }
+.psmcp h2 { font-size: 26px; margin: 64px 0 22px; }
+.psmcp-steps ol { padding-left: 22px; line-height: 1.8; font-size: 17px; max-width: 760px; }
+.psmcp-steps li { margin: 10px 0; }
+.psmcp-steps li strong { font-weight: 600; }
+.psmcp-steps blockquote { margin: 28px 0 0; padding: 18px 22px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 17px; line-height: 1.7; max-width: 760px; font-style: italic; }
+.psmcp code { font-family: ui-monospace, Menlo, monospace; font-size: .9em; background: var(--card); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border); }
+.psmcp-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 56px; }
+.psmcp-shots figure { margin: 0; }
+.psmcp-shots img { width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; }
+.psmcp-shots figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+.psmcp-grid dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px 36px; margin: 0; }
+.psmcp-grid dt { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.psmcp-grid dd { margin: 0; color: var(--muted); line-height: 1.7; font-size: 15px; }
+.psmcp-note { margin-top: 26px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+.psmcp-dev p { line-height: 1.8; font-size: 16px; max-width: 760px; color: var(--muted); }
+.psmcp-dev pre { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; overflow: auto; margin: 18px 0; max-width: 760px; }
+.psmcp-dev pre code { background: none; border: 0; padding: 0; font-size: 13px; }
+@media (max-width: 760px) { .psmcp-shots { grid-template-columns: 1fr; } .psmcp h2 { font-size: 22px; margin-top: 48px; } }
