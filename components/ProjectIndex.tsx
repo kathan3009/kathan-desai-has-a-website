@@ -1,3 +1,4 @@
+import '@/components/projects/projects.css';
 import Link from 'next/link';
 import {projectStatusLabels,type PublicProject} from '@/lib/projects';
 

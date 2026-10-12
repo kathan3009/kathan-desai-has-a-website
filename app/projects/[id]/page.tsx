@@ -8,6 +8,7 @@ import Blog from '@/models/Blog';
 import {projectFromDocument,projectStatusLabels} from '@/lib/projects';
 import {BreadcrumbListSchema} from '@/components/schema/BreadcrumbList';
 import {MarkdownRenderer} from '@/components/MarkdownRenderer';
+import '@/components/projects/projects.css';
 export const dynamic='force-dynamic';
 type Props={params:Promise<{id:string}>};
 async function getProject(id:string){if(!isValidObjectId(id))return null;const conn=await dbConnect();if(!conn)return null;return Project.findById(id).lean();}
