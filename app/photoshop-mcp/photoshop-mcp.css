@@ -1,28 +1,33 @@
 .psmcp { max-width: 1020px; }
 .psmcp-hero { max-width: 820px; }
-.psmcp-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
-.psmcp-btn { display: inline-block; padding: 13px 20px; border: 1px solid var(--foreground); border-radius: 8px; font-size: 14px; text-decoration: none; color: var(--foreground); }
-.psmcp-btn.primary { background: var(--foreground); color: var(--background); }
-.psmcp-btn.ghost { border-color: var(--border); color: var(--muted); }
-.psmcp-btn:hover { opacity: .85; }
-.psmcp-fineprint { margin-top: 16px; font-size: 12px; color: var(--muted); line-height: 1.7; max-width: 640px; }
-.psmcp-video { margin: 56px 0 10px; }
-.psmcp-video video { width: 100%; aspect-ratio: 16 / 9; background: #0e1016; border-radius: 12px; border: 1px solid var(--border); display: block; }
-.psmcp h2 { font-size: 26px; margin: 64px 0 22px; }
-.psmcp-steps ol { padding-left: 22px; line-height: 1.8; font-size: 17px; max-width: 760px; }
+.psmcp-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+.psmcp-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 20px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 500; letter-spacing: -0.01em; text-decoration: none; color: var(--foreground); background: var(--surface); transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-fast) ease, color var(--dur-fast) ease; }
+.psmcp-btn.primary { background: var(--accent); color: #fff; }
+.psmcp-btn.ghost { color: var(--muted); }
+.psmcp-btn:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .psmcp-btn:hover { background: var(--surface-2); color: var(--foreground); }
+  .psmcp-btn.primary:hover { background: color-mix(in srgb, var(--accent) 88%, #000); color: #fff; }
+}
+.psmcp-fineprint { margin-top: 16px; font-size: 13px; color: var(--muted); line-height: 1.5; max-width: 640px; }
+.psmcp-video { margin: 52px 0 10px; }
+.psmcp-video video { width: 100%; aspect-ratio: 16 / 9; background: #0e1016; border-radius: var(--radius-lg); display: block; box-shadow: var(--card-shadow); }
+.psmcp h2 { font-size: 28px; letter-spacing: -0.022em; margin: 64px 0 20px; }
+.psmcp-steps ol { padding-left: 22px; line-height: 1.55; font-size: 17px; max-width: 760px; }
 .psmcp-steps li { margin: 10px 0; }
 .psmcp-steps li strong { font-weight: 600; }
-.psmcp-steps blockquote { margin: 28px 0 0; padding: 18px 22px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 17px; line-height: 1.7; max-width: 760px; font-style: italic; }
-.psmcp code { font-family: ui-monospace, Menlo, monospace; font-size: .9em; background: var(--card); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border); }
-.psmcp-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 56px; }
+.psmcp-steps blockquote { margin: 28px 0 0; padding: 18px 22px; border-radius: var(--radius-md); background: var(--surface); color: var(--muted); font-size: 17px; line-height: 1.55; max-width: 760px; }
+.psmcp code { font-family: var(--font-mono); font-size: .9em; background: var(--surface); padding: 2px 7px; border-radius: 6px; }
+.psmcp-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 52px; }
 .psmcp-shots figure { margin: 0; }
-.psmcp-shots img { width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; }
-.psmcp-shots figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
-.psmcp-grid dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px 36px; margin: 0; }
-.psmcp-grid dt { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
-.psmcp-grid dd { margin: 0; color: var(--muted); line-height: 1.7; font-size: 15px; }
-.psmcp-note { margin-top: 26px; font-size: 13px; color: var(--muted); line-height: 1.7; }
-.psmcp-dev p { line-height: 1.8; font-size: 16px; max-width: 760px; color: var(--muted); }
-.psmcp-dev pre { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; overflow: auto; margin: 18px 0; max-width: 760px; }
-.psmcp-dev pre code { background: none; border: 0; padding: 0; font-size: 13px; }
-@media (max-width: 760px) { .psmcp-shots { grid-template-columns: 1fr; } .psmcp h2 { font-size: 22px; margin-top: 48px; } }
+.psmcp-shots img { width: 100%; border-radius: var(--radius-md); display: block; background: var(--surface); }
+.psmcp-shots figcaption { font-size: 14px; color: var(--muted); margin-top: 10px; line-height: 1.5; letter-spacing: -0.01em; }
+.psmcp-grid dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin: 0; }
+.psmcp-grid > dl > div, .psmcp-grid dl > dt { break-inside: avoid; }
+.psmcp-grid dt { font-weight: 600; font-size: 17px; letter-spacing: -0.02em; margin-bottom: 6px; }
+.psmcp-grid dd { margin: 0 0 8px; color: var(--muted); line-height: 1.5; font-size: 15px; }
+.psmcp-note { margin-top: 26px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+.psmcp-dev p { line-height: 1.55; font-size: 17px; max-width: 760px; color: var(--muted); }
+.psmcp-dev pre { background: var(--surface); border-radius: var(--radius-md); padding: 16px 18px; overflow: auto; margin: 18px 0; max-width: 760px; }
+.psmcp-dev pre code { background: none; padding: 0; font-size: 13px; }
+@media (max-width: 760px) { .psmcp-shots { grid-template-columns: 1fr; } .psmcp h2 { font-size: 24px; margin-top: 48px; } }
