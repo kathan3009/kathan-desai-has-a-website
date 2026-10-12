@@ -37,7 +37,7 @@ export default function SkillsConstellation({ byCategory }: { byCategory: Skills
           cy={cy}
           r={CATEGORY_RADIUS}
           fill="none"
-          stroke="rgba(184,115,51,0.08)"
+          stroke="rgba(var(--accent-rgb),0.08)"
           strokeWidth="1"
           strokeDasharray="4 6"
         />
@@ -65,7 +65,7 @@ export default function SkillsConstellation({ byCategory }: { byCategory: Skills
                 y1={cy}
                 x2={catPos.x}
                 y2={catPos.y}
-                stroke="rgba(184,115,51,0.12)"
+                stroke="rgba(var(--accent-rgb),0.12)"
                 strokeWidth="1"
               />
 
@@ -83,7 +83,7 @@ export default function SkillsConstellation({ byCategory }: { byCategory: Skills
                       y1={catPos.y}
                       x2={skillPos.x}
                       y2={skillPos.y}
-                      stroke={isActive ? "rgba(184,115,51,0.3)" : "rgba(184,115,51,0.1)"}
+                      stroke={isActive ? "rgba(var(--accent-rgb),0.3)" : "rgba(var(--accent-rgb),0.1)"}
                       strokeWidth="0.75"
                       className="transition-all duration-300"
                     />
@@ -91,7 +91,7 @@ export default function SkillsConstellation({ byCategory }: { byCategory: Skills
                       cx={skillPos.x}
                       cy={skillPos.y}
                       r={isActive ? 4 : 3}
-                      fill={isActive ? "rgba(184,115,51,0.6)" : "rgba(184,115,51,0.2)"}
+                      fill={isActive ? "rgba(var(--accent-rgb),0.6)" : "rgba(var(--accent-rgb),0.2)"}
                       className="transition-all duration-300"
                     />
                     <text
@@ -102,7 +102,7 @@ export default function SkillsConstellation({ byCategory }: { byCategory: Skills
                       style={{
                         fontSize: isActive ? "10px" : "9px",
                         fill: isActive ? "var(--foreground)" : "var(--muted)",
-                        fontFamily: "var(--font-geist-mono), monospace",
+                        fontFamily: "var(--font-sans)",
                       }}
                     >
                       {skill.name}
@@ -116,8 +116,8 @@ export default function SkillsConstellation({ byCategory }: { byCategory: Skills
                 cx={catPos.x}
                 cy={catPos.y}
                 r={isActive ? 24 : 20}
-                fill={isActive ? "rgba(184,115,51,0.18)" : "rgba(184,115,51,0.08)"}
-                stroke={isActive ? "rgba(184,115,51,0.6)" : "rgba(184,115,51,0.2)"}
+                fill={isActive ? "rgba(var(--accent-rgb),0.18)" : "rgba(var(--accent-rgb),0.08)"}
+                stroke={isActive ? "rgba(var(--accent-rgb),0.6)" : "rgba(var(--accent-rgb),0.2)"}
                 strokeWidth="1.5"
                 className="transition-all duration-300 cursor-pointer"
               />
@@ -146,8 +146,8 @@ export default function SkillsConstellation({ byCategory }: { byCategory: Skills
           cx={cx}
           cy={cy}
           r={8}
-          fill="rgba(184,115,51,0.15)"
-          stroke="rgba(184,115,51,0.3)"
+          fill="rgba(var(--accent-rgb),0.15)"
+          stroke="rgba(var(--accent-rgb),0.3)"
           strokeWidth="1"
         />
       </svg>

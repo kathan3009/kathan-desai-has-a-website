@@ -109,7 +109,7 @@ export function MediaBlock({
   return (
     <div
       className={`
-        rounded overflow-hidden bg-card relative
+        rounded-[14px] overflow-hidden bg-card relative
         ${isProjectCard ? "media-project-card" : ""}
         ${size ? size : `${aspect} w-full`}
         ${className}

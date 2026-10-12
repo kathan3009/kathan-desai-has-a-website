@@ -21,15 +21,19 @@ export default async function FAQPage() {
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "FAQ", url: "/faq" }]} />
       {schemaItems.length > 0 && <FAQPageSchema items={schemaItems} url="/faq" />}
       <div className="page-shell public-info">
-        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-12">FAQ</h1>
-        <div className="space-y-8">
+        <header>
+          <p className="page-kicker">Questions</p>
+          <h1>FAQ</h1>
+          <p className="page-description">Things people ask me often enough to write down.</p>
+        </header>
+        <div>
           {items.length === 0 ? (
-            <p className="text-muted">No FAQ entries yet.</p>
+            <p className="empty">No FAQ entries yet.</p>
           ) : (
             items.map((item) => (
-              <section key={item._id.toString()}>
-                <h2 className="text-lg font-semibold text-foreground mb-2">{item.question}</h2>
-                <p className="text-muted leading-relaxed">{item.answer}</p>
+              <section key={item._id.toString()} className="info-row reveal">
+                <h2 className="text-[21px] leading-tight mb-2">{item.question}</h2>
+                <p className="text-muted max-w-[680px]">{item.answer}</p>
               </section>
             ))
           )}

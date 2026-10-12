@@ -89,8 +89,8 @@ export function ReaderShell({ children }: { children: ReactNode }) {
     "--reading-width": { narrow: "35rem", standard: "43rem", wide: "50rem" }[prefs.width],
     "--reading-line": { compact: "1.5", relaxed: "1.75", spacious: "2" }[prefs.spacing],
     "--reading-face": prefs.typeface === "serif"
-      ? 'var(--font-newsreader, "Newsreader"), Georgia, serif'
-      : 'var(--font-manrope, "Manrope"), system-ui, sans-serif',
+      ? 'var(--font-serif)'
+      : 'var(--font-sans)',
   } as CSSProperties;
 
   return (
@@ -114,8 +114,8 @@ export function ReaderShell({ children }: { children: ReactNode }) {
               </div>
               <fieldset><legend>Page colour</legend><div className={styles.choices}>
                 {(["paper", "sepia", "dark"] as const).map(theme => (
-                  <button type="button" key={theme} aria-label={`Use ${theme} page colour`} aria-pressed={prefs.theme === theme} onClick={() => update({ theme })}>
-                    <span className={styles.swatch} data-swatch={theme} aria-hidden="true" />{theme[0].toUpperCase() + theme.slice(1)}
+                  <button type="button" key={theme} aria-label={`Use ${theme === "paper" ? "automatic" : theme} page colour`} aria-pressed={prefs.theme === theme} onClick={() => update({ theme })}>
+                    <span className={styles.swatch} data-swatch={theme} aria-hidden="true" />{theme === "paper" ? "Auto" : theme[0].toUpperCase() + theme.slice(1)}
                   </button>
                 ))}
               </div></fieldset>

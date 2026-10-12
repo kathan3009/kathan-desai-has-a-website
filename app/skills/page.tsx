@@ -24,29 +24,28 @@ export default async function SkillsPage() {
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "Skills", url: "/skills" }]} />
       <div className="page-shell public-info">
-        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-12">Skills</h1>
+        <header>
+          <p className="page-kicker">Toolkit</p>
+          <h1>Skills</h1>
+          <p className="page-description">What I reach for, grouped by the kind of problem.</p>
+        </header>
 
         {Object.keys(byCategory).length === 0 ? (
-          <p className="text-muted">No skills added yet.</p>
+          <p className="empty">No skills added yet.</p>
         ) : (
           <>
-            <div className="mb-16">
-              <p className="text-muted text-sm mb-6 text-center">Hover a category to explore</p>
+            <div className="mb-14 rounded-[28px] bg-surface p-4 sm:p-8 reveal">
+              <p className="text-muted text-[14px] mb-2 text-center">Hover a category to explore</p>
               <SkillsConstellation byCategory={byCategory} />
             </div>
 
-            <div className="space-y-12">
+            <div className="space-y-10">
               {Object.entries(byCategory).map(([category, skills]) => (
-                <section key={category}>
-                  <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">{category}</h2>
-                  <div className="flex flex-wrap gap-3">
+                <section key={category} className="reveal">
+                  <h2 className="text-[14px] text-muted mb-3">{category}</h2>
+                  <div className="chip-row">
                     {skills.map((s) => (
-                      <span
-                        key={s.name}
-                        className="px-4 py-2 bg-card rounded border border-border text-foreground font-mono text-sm"
-                      >
-                        {s.name}
-                      </span>
+                      <span key={s.name} className="chip">{s.name}</span>
                     ))}
                   </div>
                 </section>

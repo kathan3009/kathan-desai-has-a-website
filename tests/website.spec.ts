@@ -5,7 +5,7 @@ test.beforeEach(async({page})=>{await page.route('**/api/blog/*/view',route=>rou
 test('home, dedicated routes, clocks, hidden terminal and status',async({page})=>{
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
  await page.emulateMedia({reducedMotion:'no-preference'});
- await page.goto('/');await expect(page.locator('body')).toHaveCSS('font-family',/Manrope/);await expect(page.getByRole('heading',{name:'I’m Kathan.'})).toBeVisible();
+ await page.goto('/');await expect(page.locator('body')).toHaveCSS('font-family',/system-ui|-apple-system/);await expect(page.getByRole('heading',{name:'I’m Kathan.'})).toBeVisible();
  await expect(page.getByText(/I started BugBase/)).toBeVisible();await expect(page.getByText(/building Pentest Copilot in San Francisco/)).toBeVisible();
  await expect(page.locator('footer a[href="https://x.com/heykathan"]')).toBeVisible();
  await expect(page.locator('.scene-fallback')).toBeVisible();await expect(page.locator('.hero-clocks .clock time')).toHaveCount(2);await expect(page.locator('.life-clocks .clock time')).toHaveCount(2);

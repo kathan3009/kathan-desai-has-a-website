@@ -17,27 +17,25 @@ export default async function CertificationsPage() {
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "Certifications", url: "/certifications" }]} />
       <div className="page-shell public-info">
-        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-12">Certifications</h1>
-        <div className="space-y-6">
+        <header>
+          <p className="page-kicker">Credentials</p>
+          <h1>Certifications</h1>
+        </header>
+        <div className="grid gap-3 sm:grid-cols-2">
           {items.length === 0 ? (
-            <p className="text-muted">No certifications added yet.</p>
+            <p className="empty">No certifications added yet.</p>
           ) : (
             items.map((item) => (
-              <div key={item._id.toString()} className="card p-6">
-                <p className="text-foreground font-semibold">{item.name}</p>
+              <article key={item._id.toString()} className="card reveal flex flex-col gap-1">
+                <p className="text-foreground font-semibold text-[19px] tracking-[-0.02em] leading-tight">{item.name}</p>
                 <p className="text-muted">{item.issuer}</p>
-                <p className="text-muted text-sm mt-1">{item.date}</p>
+                <p className="text-muted text-[14px]">{item.date}</p>
                 {item.url && (
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-accent hover:underline text-sm mt-2 inline-block"
-                  >
-                    Verify →
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-link mt-2">
+                    Verify <span aria-hidden>↗</span>
                   </a>
                 )}
-              </div>
+              </article>
             ))
           )}
         </div>

@@ -3,7 +3,7 @@
   --background: #f7f7f4; --foreground: #242b29; --muted: #627168; --accent: #355743; --border: #d9dfd8; --card: #fff;
   --color-background: #f7f7f4; --color-foreground: #242b29; --color-muted: #627168; --color-accent: #355743; --color-border: #d9dfd8; --color-card: #fff;
   position: relative; z-index: 1; min-height: calc(100dvh - var(--site-header-height, 84px)); display: grid; grid-template-columns: 225px minmax(0, 1fr); isolation: isolate;
-  background: #f7f7f4; color: #242b29; font-family: "Manrope", sans-serif; font-size: 14px; line-height: 1.65; color-scheme: light; text-align: left;
+  background: #f7f7f4; color: #242b29; font-family: -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.65; color-scheme: light; text-align: left;
 }
 .admin-shell * { box-sizing: border-box; }
 .admin-shell h1, .admin-shell h2, .admin-shell h3 { font-family: inherit; color: #242b29; text-transform: none; }

@@ -51,7 +51,7 @@ export default function Landing({projects,posts,photos,available}:LandingData){
         onUpdate:self=>{state.current.progress=self.progress*4;window.dispatchEvent(new Event('scenechange'));},
       });
       if(!reduced){
-        gsap.fromTo('.hero-copy > *',{opacity:0,y:18},{opacity:1,y:0,stagger:.08,duration:.8,ease:'power3.out',clearProps:'opacity,transform'});
+        gsap.fromTo('.hero-copy > *',{opacity:0,y:14},{opacity:1,y:0,stagger:.06,duration:.7,ease:'power3.out',clearProps:'opacity,transform'});
         gsap.to('.hero-content',{opacity:0,y:-24,ease:'none',scrollTrigger:{trigger:'#home',start:'bottom 100%',end:'bottom 55%',scrub:true}});
         gsap.utils.toArray<HTMLElement>('.landing-reveal').forEach(element=>{
           gsap.timeline({scrollTrigger:{trigger:element.closest('.landing-chapter'),start:'top 45%',end:'bottom 55%',scrub:true}})

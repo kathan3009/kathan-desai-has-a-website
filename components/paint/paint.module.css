@@ -19,8 +19,8 @@
 }
 .masthead h1 {
   font-size: clamp(38px, 4.4vw, 54px);
-  font-weight: 400;
-  letter-spacing: -0.055em;
+  font-weight: 600;
+  letter-spacing: -0.028em;
   line-height: 1.1;
 }
 .masthead p {
@@ -94,7 +94,7 @@
   padding-top: 22px;
 }
 .group h2 {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--muted);
   margin-bottom: 12px;
@@ -114,7 +114,7 @@
   padding: 3px 0 6px;
   border: 0;
   background: none;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   border-radius: 4px;
 }
@@ -157,7 +157,7 @@
 }
 .brush small {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .brush[aria-pressed='true'] {
@@ -198,7 +198,7 @@
 .sliderLabel {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 6px;
 }
@@ -295,7 +295,7 @@
   gap: 10px;
   padding: 7px 0;
   border-bottom: 1px solid var(--border);
-  font-size: 11px;
+  font-size: 12px;
 }
 .moves dd {
   margin: 0;

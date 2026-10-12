@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
-import '@fontsource/manrope/latin-400.css';
+import type { Metadata, Viewport } from "next";
+// The interface uses the platform's own type. Archivo Black only dresses the
+// web-slinger mode, and Newsreader is the reader's serif.
 import '@fontsource/archivo-black/latin-400.css';
-import '@fontsource/manrope/latin-500.css';
-import '@fontsource/manrope/latin-600.css';
 import '@fontsource/newsreader/latin-400.css';
 import '@fontsource/newsreader/latin-500.css';
 import "./globals.css";
@@ -16,7 +15,7 @@ import GestureGuide from "@/components/gestures/GestureGuide";
 import { PersonSchema } from "@/components/schema/Person";
 import { OrganizationSchema } from "@/components/schema/Organization";
 
-// Restores the mode before first paint so there is no flash of the beige theme.
+// Restores the mode before first paint so there is no flash of the default theme.
 const SPIDEY_INIT = `try{if(localStorage.getItem("web-slinger-mode")==="on"){document.documentElement.dataset.theme="spidey"}}catch(e){}`;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kathandesai.com";
@@ -36,6 +35,19 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+};
+
+// The page paints edge to edge and the browser chrome matches the page in each
+// appearance. Zoom is never disabled; inputs are 16px so Safari never needs it.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 export default function RootLayout({

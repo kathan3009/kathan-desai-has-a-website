@@ -17,25 +17,30 @@ export default async function WorkPage() {
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "Work", url: "/work" }]} />
       <div className="page-shell public-info">
-        <header className="mb-12">
-          <p className="text-[10px] text-accent font-semibold uppercase tracking-[0.3em] mb-2">Experience</p>
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">Work</h1>
+        <header>
+          <p className="page-kicker">Experience</p>
+          <h1>Work</h1>
+          <p className="page-description">The roles that shaped how I build, most recent first.</p>
         </header>
-        <div className="space-y-8">
+        <div>
           {items.length === 0 ? (
-            <p className="text-muted">No work experience added yet.</p>
+            <p className="empty">No work experience added yet.</p>
           ) : (
             items.map((item) => (
-              <article key={item._id.toString()} className="border-b border-border pb-8 last:border-0">
-                <p className="text-foreground font-semibold text-lg">{item.role}</p>
-                <p className="text-accent">{item.company}</p>
-                <p className="text-muted text-sm mt-1">{item.period}</p>
+              <article key={item._id.toString()} className="info-row reveal">
+                <div className="info-grid">
+                  <div>
+                    <p className="text-foreground font-semibold text-[21px] tracking-[-0.02em] leading-tight">{item.role}</p>
+                    <p className="text-muted mt-1">{item.company}</p>
+                  </div>
+                  <p className="text-muted text-[15px] sm:text-right">{item.period}</p>
+                </div>
                 {item.description && (
-                  <p className="text-muted mt-4 leading-relaxed">{item.description}</p>
+                  <p className="text-muted mt-4 max-w-[640px]">{item.description}</p>
                 )}
                 {item.url && (
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline text-sm mt-2 inline-block">
-                    Visit →
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-link mt-3">
+                    Visit <span aria-hidden>↗</span>
                   </a>
                 )}
               </article>
