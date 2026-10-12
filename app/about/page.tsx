@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
 
@@ -11,11 +12,14 @@ export default function AboutPage() {
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "About", url: "/about" }]} />
       <article className="page-shell about-story">
-        <header>
-          <p className="page-kicker">A short version</p>
-          <h1>I build things.</h1>
-          <p className="about-lede">I am Kathan, founder of BugBase and the person building Pentest Copilot Enterprise.</p>
-        </header>
+        <div className="about-open">
+          <header>
+            <p className="page-kicker">A short version</p>
+            <h1>I build things.</h1>
+            <p className="about-lede">I am Kathan, founder of BugBase and the person building Pentest Copilot Enterprise.</p>
+          </header>
+          <Link href="/photography" className="tile tile-photo"><img src="/images/monastery-preview.webp" alt="Key Monastery under snow, one of my photographs" /><span>Where I go to slow down ›</span></Link>
+        </div>
 
         <div className="about-moments">
           <section>

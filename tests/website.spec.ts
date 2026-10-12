@@ -8,11 +8,10 @@ test('home, dedicated routes, clocks, hidden terminal and status',async({page})=
  await page.goto('/');await expect(page.locator('body')).toHaveCSS('font-family',/system-ui|-apple-system/);await expect(page.getByRole('heading',{name:'I’m Kathan.'})).toBeVisible();
  await expect(page.getByText(/I started BugBase/)).toBeVisible();await expect(page.getByText(/building Pentest Copilot in San Francisco/)).toBeVisible();
  await expect(page.locator('footer a[href="https://x.com/heykathan"]')).toBeVisible();
- await expect(page.locator('.scene-fallback')).toBeVisible();await expect(page.locator('.life-clocks .clock time')).toHaveCount(2);
- await expect(page.locator('.landing-chapter')).toHaveCount(5);await expect(page.locator('.landing-content').first()).toHaveCSS('position','relative');
- await page.evaluate(()=>scrollTo(0,innerHeight/2));await page.waitForTimeout(150);const transition=await page.locator('.hero-content').evaluateAll(elements=>elements.map(element=>Number(getComputedStyle(element).opacity)));expect(transition.every(opacity=>opacity<.08)).toBeTruthy();expect(await page.locator('#bugbase .landing-content').evaluate(element=>Number(getComputedStyle(element).opacity))).toBe(1);await page.evaluate(()=>scrollTo(0,0));
+ await expect(page.locator('.tile-clocks .clock time')).toHaveCount(2);await expect(page.locator('.bento .tile')).toHaveCount(9);
+ await page.waitForTimeout(1200);const risen=await page.locator('.rise').evaluateAll(elements=>elements.map(element=>Number(getComputedStyle(element).opacity)));expect(risen.every(opacity=>opacity===1)).toBeTruthy();
  await expect(page.getByRole('button',{name:/terminal/i})).toHaveCount(0);
- await page.getByLabel('Reduce motion',{exact:true}).check();await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');await expect(page.locator('.scene canvas')).toHaveCount(0);await page.getByLabel('Reduce motion',{exact:true}).uncheck();await page.evaluate(()=>{(document.activeElement as HTMLElement | null)?.blur();});
+ await page.getByLabel('Reduce motion',{exact:true}).check();await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');await page.getByLabel('Reduce motion',{exact:true}).uncheck();await page.evaluate(()=>{(document.activeElement as HTMLElement | null)?.blur();});
  await page.keyboard.type('abracadabra');await expect(page.getByRole('dialog',{name:'Terminal'})).toBeVisible();
  await page.getByRole('textbox',{name:'Terminal input'}).fill('now');await page.keyboard.press('Enter');
  await expect(page.getByText('A random guess, not live activity.')).toBeVisible();await page.keyboard.press('Escape');
@@ -23,7 +22,7 @@ test('home, dedicated routes, clocks, hidden terminal and status',async({page})=
 });
 test('mobile navigation and quiet motion work without horizontal overflow',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/');
- await expect(page.locator('.scene canvas')).toHaveCount(0);await expect(page.locator('.scene-fallback')).toBeVisible();
+ await expect(page.locator('.bento .tile').first()).toBeVisible();
  const menu=page.locator('.nav-menu');await menu.click();await expect(menu).toHaveAttribute('aria-expanded','true');await page.keyboard.press('Escape');await expect(menu).toHaveAttribute('aria-expanded','false');await expect(menu).toBeFocused();
  await menu.click();await expect(menu).toHaveAttribute('aria-expanded','true');await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Writing',exact:true}).click();
  await expect(page).toHaveURL(/\/blogs$/);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();

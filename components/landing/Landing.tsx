@@ -1,20 +1,11 @@
-"use client";
-
-/* The CMS photographs use their natural ratios to form the closing sequence. */
+/* The home page: a short introduction, then a grid of tiles where the product,
+   the company, the two cities, the writing and the photographs each get a
+   place. The photographs use their own colours for the only glow on the page. */
 /* eslint-disable @next/next/no-img-element */
 
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import {useEffect,useLayoutEffect,useRef,type SyntheticEvent} from 'react';
-import gsap from 'gsap';
-import {ScrollTrigger} from 'gsap/ScrollTrigger';
-import type {SceneState} from './Scene';
 import Clocks from './Clocks';
-import {useReducedMotion} from '../MotionPreference';
 import './landing.css';
-
-const Scene=dynamic(()=>import('./Scene'),{ssr:false,loading:()=> <div className="scene" aria-hidden><div className="scene-fallback"/></div>});
-gsap.registerPlugin(ScrollTrigger);
 
 export type LandingData={
   projects:{id:string;name:string;description:string;stack:string[]}[];
@@ -23,87 +14,57 @@ export type LandingData={
   available:boolean;
 };
 
-function setPhotoRatio(event:SyntheticEvent<HTMLImageElement>){
-  const image=event.currentTarget;
-  image.parentElement?.style.setProperty('--photo-ratio',String(image.naturalWidth/image.naturalHeight));
-}
-
 export default function Landing({projects,posts,photos,available}:LandingData){
-  const reduced=useReducedMotion();
-  const ref=useRef<HTMLDivElement>(null);
-  const state=useRef<SceneState>({progress:0,paused:false});
+  const [product,...experiments]=projects;
+  const [tall,second,third]=photos;
+  let i=0;
+  const rise=(extra='')=>({className:`${extra} rise`.trim(),style:{'--i':i++} as React.CSSProperties});
 
-  useEffect(()=>{
-    document.body.classList.add('on-landing');
-    return()=>{document.body.classList.remove('on-landing');delete document.body.dataset.chapter;};
-  },[]);
-
-  useLayoutEffect(()=>{
-    const ctx=gsap.context(()=>{
-      // The header knows which chapter is on screen; the photograph only moves
-      // while the hero is still visible.
-      const sections=gsap.utils.toArray<HTMLElement>('.landing-chapter');
-      sections.forEach(section=>ScrollTrigger.create({
-        trigger:section,start:'top 52%',end:'bottom 48%',
-        onToggle:self=>{if(self.isActive)document.body.dataset.chapter=section.id;},
-      }));
-      ScrollTrigger.create({
-        trigger:'#home',start:'top top',end:'bottom top',
-        onUpdate:self=>{state.current.progress=self.progress;window.dispatchEvent(new Event('scenechange'));},
-      });
-      if(!reduced){
-        gsap.fromTo('.hero-copy > *',{opacity:0,y:14},{opacity:1,y:0,stagger:.06,duration:.7,ease:'power3.out',clearProps:'opacity,transform'});
-        gsap.to('.hero-content',{opacity:0,y:-24,ease:'none',scrollTrigger:{trigger:'#home',start:'bottom 100%',end:'bottom 55%',scrub:true}});
-      }
-    },ref);
-    return()=>ctx.revert();
-  },[reduced]);
-
-  return <div ref={ref} className={`landing ${reduced?'motion-quiet':''}`}>
-    <section className="landing-chapter landing-hero" id="home">
-      <Scene state={state} reduced={reduced}/><div className="scene-shade" aria-hidden/>
-      <div className="landing-content hero-content">
-        <div className="hero-copy">
-          <p className="chapter-label">Founder · Builder · Photographer</p>
-          <h1>I’m Kathan.</h1>
-          <p className="hero-lead">I started <a href="https://bugbase.in" target="_blank" rel="noreferrer">BugBase</a> and I’m building Pentest Copilot in San Francisco.</p>
-          <p className="hero-aside">I like useful technology, clear writing, and getting far enough from a screen to notice the light.</p>
-          <a className="landing-link hero-link" href="https://copilot.bugbase.ai" target="_blank" rel="noreferrer">Pentest Copilot Enterprise ↗</a>
-        </div>
-      </div>
+  return <div className="landing">
+    <section className="hero" aria-labelledby="hero-title">
+      <div className="hero-glow" aria-hidden/>
+      <h1 id="hero-title" {...rise()}>I’m Kathan.</h1>
+      <p {...rise('hero-lead')}>I started <a href="https://bugbase.in" target="_blank" rel="noreferrer">BugBase</a> and I’m building Pentest Copilot in San Francisco.</p>
+      <p {...rise('hero-aside')}>Useful technology, clear writing, and enough time outside to notice the light.</p>
+      <div {...rise('hero-actions')}><Link className="pill" href="/projects">See the work</Link><Link className="pill-quiet" href="/blogs">Read the writing</Link></div>
     </section>
 
-    <section className="landing-chapter" id="bugbase">
-      <div className="landing-content landing-split">
-        <div className="landing-intro"><p className="chapter-label">The company</p><h2>BugBase.</h2><p>I started it with three friends when I was 20. What began in a college dorm became the company behind Pentest Copilot Enterprise, which is where my days go now.</p><a className="landing-link" href="https://bugbase.in" target="_blank" rel="noreferrer">Visit BugBase ↗</a></div>
-        <dl className="landing-facts" aria-label="BugBase at a glance">
-          <div><dt>Founded</dt><dd>2021, New Delhi</dd></div>
-          <div><dt>What it does</dt><dd>Managed security programs and bug bounties for companies.</dd></div>
-          <div><dt>Now building</dt><dd>Pentest Copilot Enterprise, an AI-native pentesting platform.</dd></div>
-        </dl>
-      </div>
-    </section>
+    <section className="bento" aria-label="Highlights">
+      {product
+        ? <Link href={`/projects/${product.id}`} className="tile tile-dark span-2 row-2 rise" style={{'--i':i++} as React.CSSProperties}>
+            <small>Building now</small>
+            <div><h2>{product.name}</h2><p>{product.description}</p><span className="tile-link">Open the project ›</span></div>
+          </Link>
+        : <div className="tile tile-dark span-2 row-2 rise" style={{'--i':i++} as React.CSSProperties}><small>Building now</small><div><h2>Pentest Copilot Enterprise</h2><p>{available?'Project details are on their way.':'Projects are temporarily unavailable.'}</p></div></div>}
 
-    <section className="landing-chapter" id="building">
-      <div className="landing-content landing-split">
-        <div className="landing-intro"><p className="chapter-label">The work</p><h2>Things I’ve built.</h2><p>The product in focus, followed by the experiments that taught me something.</p><Link className="landing-link" href="/projects">See all projects →</Link></div>
-        <div className="landing-projects">{projects.map((project,index)=><article key={project.id}><small>{index===0?'Current product':'Recent experiment'}</small><h3><Link href={`/projects/${project.id}`}>{project.name}</Link></h3><p>{project.description}</p>{project.stack.length>0&&<div>{project.stack.slice(0,4).join(' · ')}</div>}</article>)}{projects.length===0&&<p>{available?'More projects are on their way.':'Projects are temporarily unavailable.'}</p>}</div>
-      </div>
-    </section>
+      {tall
+        ? <Link href={`/photography?photo=${tall.id}`} className="tile tile-photo row-2 rise" style={{'--i':i++} as React.CSSProperties}><img src={tall.image} alt={tall.caption||'Photograph by Kathan Desai'} loading="eager"/><span>{tall.caption||'Photography'}</span></Link>
+        : <Link href="/photography" className="tile tile-photo row-2 rise" style={{'--i':i++} as React.CSSProperties}><img src="/images/monastery-preview.webp" alt="Key Monastery in snow" loading="eager"/><span>Photography</span></Link>}
 
-    <section className="landing-chapter" id="writing">
-      <div className="landing-content landing-split">
-        <div className="landing-intro"><p className="chapter-label">The thinking</p><h2>Writing it down.</h2><p>Build notes and ideas I wanted to understand well enough to explain.</p><Link className="landing-link" href="/blogs">Read the writing →</Link></div>
-        <div className="landing-essays">{posts.map(post=><Link key={post.slug} href={`/blogs/${post.slug}`}><small>{post.date}</small><h3>{post.title}</h3></Link>)}{posts.length===0&&<p>{available?'More writing is on its way.':'Writing is temporarily unavailable.'}</p>}</div>
-      </div>
-    </section>
+      <div className="tile tile-clocks rise" style={{'--i':i++} as React.CSSProperties}><small>Two homes</small><Clocks reduced={false}/></div>
 
-    <section className="landing-chapter landing-life" id="life">
-      <div className="landing-content life-content">
-        <div className="life-heading"><div><p className="chapter-label">Outside the work</p><h2>Life, in between.</h2></div><div className="life-copy"><p>From New Delhi. In San Francisco, for now. I write, take photographs, and keep making small things because I’m curious.</p><div><Link href="/about">About me →</Link><Link href="/photography">Photography →</Link></div></div></div>
-        <div className="landing-photo-strip">{photos.map(photo=><Link key={photo.id} href={`/photography?photo=${photo.id}`}><img src={photo.image} alt={photo.caption||'Photograph by Kathan Desai'} loading="lazy" onLoad={setPhotoRatio}/><span>{photo.caption}</span></Link>)}</div>
-        <div className="life-footer"><span>Two places I call home.</span><div className="life-clocks"><Clocks reduced={reduced}/></div></div>
+      <a href="https://bugbase.in" target="_blank" rel="noreferrer" className="tile tile-tint rise" style={{'--i':i++} as React.CSSProperties}><small>The company</small><div><h2>BugBase</h2><p>Security programs and bug bounties, since 2021.</p></div></a>
+
+      <div className="tile span-2 rise" style={{'--i':i++} as React.CSSProperties}>
+        <small>Writing</small>
+        <ul className="tile-list">{posts.map(post=><li key={post.slug}><Link href={`/blogs/${post.slug}`}><span>{post.title}</span><time>{post.date}</time></Link></li>)}{posts.length===0&&<li><p>{available?'More writing is on its way.':'Writing is temporarily unavailable.'}</p></li>}</ul>
+        <Link className="tile-link" href="/blogs">All essays ›</Link>
       </div>
+
+      <div className="tile rise" style={{'--i':i++} as React.CSSProperties}>
+        <small>Experiments</small>
+        <ul className="tile-list tile-list-tight">{experiments.slice(0,3).map(project=><li key={project.id}><Link href={`/projects/${project.id}`}>{project.name}</Link></li>)}{experiments.length===0&&<li><p>{available?'More projects soon.':'Temporarily unavailable.'}</p></li>}</ul>
+        <Link className="tile-link" href="/projects">All projects ›</Link>
+      </div>
+
+      <Link href="/now" className="tile rise" style={{'--i':i++} as React.CSSProperties}><small>Now</small><div><h2>San Francisco</h2><p>From New Delhi. Here for the work, for now.</p></div></Link>
+
+      {second
+        ? <Link href={`/photography?photo=${second.id}`} className="tile tile-photo span-2 tile-wide rise" style={{'--i':i++} as React.CSSProperties}><img src={second.image} alt={second.caption||'Photograph by Kathan Desai'} loading="lazy"/><span>{second.caption||'Photography'}</span></Link>
+        : <Link href="/photography" className="tile tile-photo span-2 tile-wide rise" style={{'--i':i++} as React.CSSProperties}><img src="/images/night-original.webp" alt="A lit tent under the stars" loading="lazy"/><span>Photography</span></Link>}
+      {third
+        ? <Link href={`/photography?photo=${third.id}`} className="tile tile-photo span-2 tile-wide rise" style={{'--i':i++} as React.CSSProperties}><img src={third.image} alt={third.caption||'Photograph by Kathan Desai'} loading="lazy"/><span>{third.caption||'Photography'}</span></Link>
+        : <Link href="/photography" className="tile tile-photo span-2 tile-wide rise" style={{'--i':i++} as React.CSSProperties}><img src="/images/dusk-1920.webp" alt="Alpenglow on a Himalayan ridge" loading="lazy"/><span>Away from the keyboard</span></Link>}
     </section>
   </div>;
 }
