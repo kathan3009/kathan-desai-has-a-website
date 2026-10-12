@@ -1,4 +1,4 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kathandesai.com";
+import { SITE_URL } from "@/lib/site";
 
 type BreadcrumbItem = { name: string; url: string };
 

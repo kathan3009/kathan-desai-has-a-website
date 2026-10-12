@@ -47,3 +47,14 @@ test('real photography supports visual stories, deep links, full-size viewing an
  await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);expect(page.url()).not.toEqual(url);
  const reopened=Date.now();await photo.click();await expect(page.getByRole('dialog')).toBeVisible();expect(Date.now()-reopened).toBeLessThan(1500);await page.keyboard.press('Escape');
 });
+
+test('search and answer engines get a sitemap, feed, llms.txt, share image and one h1 per page',async({page,request})=>{
+ const robots=await request.get('/robots.txt');expect(await robots.text()).toMatch(/User-Agent: OAI-SearchBot\nAllow: \//);
+ const sitemap=await request.get('/sitemap.xml');expect(sitemap.headers()['content-type']).toMatch(/xml/);expect(await sitemap.text()).toContain('<loc>https://www.kathandesai.com/photoshop-mcp</loc>');
+ const feed=await request.get('/feed.xml');expect(feed.headers()['content-type']).toMatch(/rss\+xml/);expect(await feed.text()).toContain('<item>');
+ const llms=await request.get('/llms.txt');expect(await llms.text()).toMatch(/^# Kathan Desai/);
+ const og=await request.get('/opengraph-image');expect(og.headers()['content-type']).toBe('image/png');
+ const icon=await request.get('/icon.png');expect((await icon.body()).length).toBeLessThan(100000);
+ await page.goto('/');await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content',/opengraph-image/);await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href','https://www.kathandesai.com');await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveCount(1);
+ for(const route of ['/','/about','/projects','/blogs','/photography','/photoshop-mcp']){await page.goto(route);expect(await page.locator('h1').count()).toBe(1);}
+});

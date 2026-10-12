@@ -14,27 +14,42 @@ import GestureProvider from "@/components/gestures/GestureProvider";
 import GestureGuide from "@/components/gestures/GestureGuide";
 import { PersonSchema } from "@/components/schema/Person";
 import { OrganizationSchema } from "@/components/schema/Organization";
+import { WebSiteSchema } from "@/components/schema/WebSite";
+import { AUTHOR, FEED_ALTERNATE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 
 // Restores the mode before first paint so there is no flash of the default theme.
 const SPIDEY_INIT = `try{if(localStorage.getItem("web-slinger-mode")==="on"){document.documentElement.dataset.theme="spidey"}}catch(e){}`;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kathandesai.com";
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Kathan Desai | Founder of BugBase",
+    default: SITE_TITLE,
     template: "Kathan Desai | %s",
   },
-  description:
-    "Kathan Desai founded BugBase and is in San Francisco building Pentest Copilot Enterprise. Projects, writing, and photographs.",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: AUTHOR.name, url: AUTHOR.url }],
+  creator: AUTHOR.name,
+  publisher: AUTHOR.name,
+  category: "technology",
+  alternates: {
+    types: FEED_ALTERNATE,
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
+    siteName: SITE_NAME,
+    url: "/",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
+    creator: AUTHOR.handle,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
 };
 
 // The page paints edge to edge and the browser chrome matches the page in each
@@ -66,6 +81,7 @@ export default function RootLayout({
           <link rel="dns-prefetch" href="https://pub-e6b13b1038d84eb5b4a3c0cf7bf0e50a.r2.dev" />
           <link rel="preconnect" href="https://img.youtube.com" />
           <link rel="dns-prefetch" href="https://img.youtube.com" />
+          <WebSiteSchema />
           <PersonSchema />
           <OrganizationSchema />
         </head>

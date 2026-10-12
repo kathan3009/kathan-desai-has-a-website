@@ -5,6 +5,8 @@ import { MermaidDiagram } from "./MermaidDiagram";
 import styles from "./reading/reading.module.css";
 
 const components: Components = {
+  // The page already has its h1 (the title); a "# Heading" inside a post becomes a section heading.
+  h1: ({ children, id }) => <h2 id={id}>{children}</h2>,
   a: ({ href, children, title, id, className, ...props }) => {
     const external = /^(https?:)?\/\//.test(href ?? "");
     return <a href={href} title={title} id={id} className={className}

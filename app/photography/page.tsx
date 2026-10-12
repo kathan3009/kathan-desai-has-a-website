@@ -1,6 +1,7 @@
 import dbConnect from "@/lib/db";
 import Photo from "@/models/Photo";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
+import { ImageGallerySchema } from "@/components/schema/ImageGallery";
 import PhotographyGallery, { type PhotoItem } from "@/components/PhotographyGallery";
 import styles from "@/components/photography/photography.module.css";
 
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Photography",
   description: "Photographs by Kathan Desai, taken on the road and away from work.",
+  alternates: { canonical: "/photography" },
 };
 
 export default async function PhotographyPage({ searchParams }: {
@@ -39,6 +41,7 @@ export default async function PhotographyPage({ searchParams }: {
   return (
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "Photography", url: "/photography" }]} />
+      <ImageGallerySchema photos={photoItems} />
       <div className={styles.page}>
         <div className="page-shell">
           <header className={styles.heading}>

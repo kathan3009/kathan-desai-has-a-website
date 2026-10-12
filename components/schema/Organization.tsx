@@ -1,19 +1,15 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kathandesai.com";
+import { AUTHOR, COMPANY } from "@/lib/site";
 
 export function OrganizationSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "bugbase",
-    url: "https://bugbase.in",
-    logo: `${SITE_URL}/logo.png`,
-    sameAs: ["https://twitter.com/bugbase", "https://linkedin.com/company/bugbase"].filter(Boolean),
+    "@id": COMPANY.id,
+    name: COMPANY.name,
+    url: COMPANY.url,
+    foundingDate: COMPANY.foundingDate,
+    founder: { "@id": AUTHOR.id },
+    sameAs: COMPANY.sameAs,
   };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
-  );
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />;
 }

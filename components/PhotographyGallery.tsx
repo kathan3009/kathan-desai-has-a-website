@@ -21,13 +21,22 @@ export default function PhotographyGallery({photos}:{photos:PhotoItem[]}){
   const openPhoto=(index:number)=>{const url=new URL(window.location.href);url.searchParams.set("photo",photos[index]._id);writeHistory("push",{...(window.history.state||{}),photographyGallery:true},url);setSelectedPhotoId(photos[index]._id);};
   const navigatePhoto=(index:number)=>{const url=new URL(window.location.href);url.searchParams.set("photo",photos[index]._id);writeHistory("replace",{...(window.history.state||{}),photographyGallery:!!window.history.state?.photographyGallery},url);setSelectedPhotoId(photos[index]._id);};
   if(!photos.length)return <p className={styles.empty}>No photographs yet.</p>;
-  const category=photos.find(photo=>photo.category?.trim())?.category?.trim()||"The mountains";
-  return <section className={styles.gallery} aria-labelledby="photo-story-title">
-    <header className={styles.storyHeader}><div><p>Visual story · {String(photos.length).padStart(2,'0')} frames</p><h2 id="photo-story-title">{category}</h2></div><p>Cold nights, long roads, monasteries, and the last light before dark.</p></header>
-    <div className={styles.storyList}>{photos.map((photo,index)=><PhotoCard key={photo._id} photo={photo} index={index} onClick={()=>openPhoto(index)}/>)}</div>
+  // Photos stay in admin order; consecutive photos with the same category form one story.
+  const stories:{category:string;start:number;photos:PhotoItem[]}[]=[];
+  photos.forEach((photo,index)=>{const category=photo.category?.trim()||"The mountains";const last=stories[stories.length-1];if(last&&last.category===category)last.photos.push(photo);else stories.push({category,start:index,photos:[photo]});});
+  return <div className={styles.stories}>
+    {stories.map(story=><section key={`${story.category}-${story.start}`} className={styles.gallery} aria-labelledby={`photo-story-${story.start}`}>
+      <header className={styles.storyHeader}><div><p>Visual story · {String(story.photos.length).padStart(2,'0')} frames</p><h2 id={`photo-story-${story.start}`}>{story.category}</h2></div>{STORY_LINES[story.category]&&<p>{STORY_LINES[story.category]}</p>}</header>
+      <div className={styles.storyList}>{story.photos.map((photo,offset)=><PhotoCard key={photo._id} photo={photo} index={story.start+offset} onClick={()=>openPhoto(story.start+offset)}/>)}</div>
+    </section>)}
     {lightboxIndex>=0&&<Lightbox photos={photos} currentIndex={lightboxIndex} onClose={closeLightbox} onNavigate={navigatePhoto}/>}
-  </section>;
+  </div>;
 }
+
+const STORY_LINES:Record<string,string>={
+  "The mountains":"Cold nights, long roads, monasteries, and the last light before dark.",
+  "San Francisco":"The bridge at every hour, cypress against the fog, and a park full of herons.",
+};
 
 function PhotoCard({photo,index,onClick}:{photo:PhotoItem;index:number;onClick:()=>void}){
   const [failed,setFailed]=useState(false);

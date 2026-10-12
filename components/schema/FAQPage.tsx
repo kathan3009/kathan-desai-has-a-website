@@ -1,4 +1,5 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kathandesai.com";
+
+import { absoluteUrl } from "@/lib/site";
 
 type FAQItem = { question: string; answer: string };
 
@@ -6,6 +7,8 @@ export function FAQPageSchema({ items, url }: { items: FAQItem[]; url: string })
   const schema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    "@id": absoluteUrl(url),
+    url: absoluteUrl(url),
     mainEntity: items.map((item) => ({
       "@type": "Question",
       name: item.question,

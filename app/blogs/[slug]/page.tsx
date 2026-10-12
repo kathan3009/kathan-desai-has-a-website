@@ -11,6 +11,8 @@ import { ReaderShell } from "@/components/reading/ReaderShell";
 import { postDate, readingMinutes } from "@/components/reading/post-utils";
 import styles from "@/components/reading/reading.module.css";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { plainText } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +26,8 @@ const getPost = cache(async (slug: string) => {
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const post = await getPost(slug);
-  if (!post) return { title: "Not Found" };
-  const description = post.excerpt || post.content.slice(0, 160);
+  if (!post) return { title: "Not Found", robots: { index: false } };
+  const description = post.excerpt || plainText(post.content);
   const image = post.featuredImage ? [post.featuredImage] : [];
   return {
     title: post.title,
@@ -39,6 +41,9 @@ export async function generateMetadata({ params }: Props) {
       url: `/blogs/${encodeURIComponent(post.slug)}`,
       publishedTime: postDate(post.publishedAt)?.iso,
       modifiedTime: postDate(post.dateModified || post.updatedAt || post.publishedAt)?.iso,
+      authors: [post.author?.name || "Kathan Desai"],
+      section: post.category || undefined,
+      tags: Array.isArray(post.tags) && post.tags.length ? post.tags.map(String) : undefined,
       images: image,
     },
     twitter: {
@@ -55,8 +60,7 @@ export default async function BlogPostPage({ params }: Props) {
   const post = await getPost(slug);
   if (!post) notFound();
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kathandesai.com";
-  const url = `${baseUrl}/blogs/${encodeURIComponent(post.slug)}`;
+  const url = `${SITE_URL}/blogs/${encodeURIComponent(post.slug)}`;
 
   const published = postDate(post.publishedAt);
   const modified = postDate(post.dateModified || post.updatedAt || post.publishedAt);
@@ -73,7 +77,10 @@ export default async function BlogPostPage({ params }: Props) {
       />
       <ArticleSchema
         headline={post.title}
-        description={post.excerpt || post.content.slice(0, 160)}
+        description={post.excerpt || plainText(post.content)}
+        keywords={Array.isArray(post.tags) ? post.tags.map(String) : undefined}
+        section={post.category || undefined}
+        wordCount={post.content.trim().split(/\s+/).filter(Boolean).length}
         datePublished={published?.iso ?? ""}
         dateModified={modified?.iso ?? ""}
         image={post.featuredImage}

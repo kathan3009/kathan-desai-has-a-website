@@ -10,6 +10,7 @@ import { ReaderShell } from "@/components/reading/ReaderShell";
 import { postDate, readingMinutes } from "@/components/reading/post-utils";
 import styles from "@/components/reading/reading.module.css";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { SITE_URL } from "@/lib/site";
 
 const SLUG = "photoshop-mcp-let-your-agent-work-in-photoshop";
 const TITLE = "Photoshop MCP: let your agent work in Photoshop";
@@ -29,12 +30,11 @@ const content = () => readFile(join(process.cwd(), "content", `${SLUG}.md`), "ut
 
 export default async function PhotoshopMcpPost() {
   const md = await content();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kathandesai.com";
   const published = postDate(PUBLISHED)!;
   return (
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "Writing", url: "/blogs" }, { name: TITLE, url: `/blogs/${SLUG}` }]} />
-      <ArticleSchema headline={TITLE} description={EXCERPT} datePublished={published.iso} dateModified={published.iso} image={IMAGE} url={`${baseUrl}/blogs/${SLUG}`} authorName="Kathan Desai" authorUrl={`${baseUrl}/about`} />
+      <ArticleSchema headline={TITLE} description={EXCERPT} datePublished={published.iso} dateModified={published.iso} image={IMAGE} url={`${SITE_URL}/blogs/${SLUG}`} authorName="Kathan Desai" authorUrl={`${SITE_URL}/about`} />
       <ReaderShell>
         <article id="reading-article" tabIndex={-1} className={styles.article} aria-labelledby="article-title">
           <header className={styles.articleHeader}>

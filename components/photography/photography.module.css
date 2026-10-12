@@ -8,6 +8,7 @@
 .storyHeader>div>p{font-size:13px;font-weight:600;color:var(--photo-muted);letter-spacing:-.01em;margin-bottom:10px}
 .storyHeader h2{font-size:clamp(28px,3.6vw,46px);font-weight:600;letter-spacing:-.025em;line-height:1.1}
 .storyHeader>p{font-size:15px;line-height:1.5;letter-spacing:-.01em;color:var(--photo-muted);max-width:410px;justify-self:end}
+.stories{display:grid;gap:120px}
 .storyList{display:grid;gap:96px}
 .photo{margin:0;min-width:0;width:100%}
 .photo:nth-child(even){text-align:right}
@@ -52,5 +53,5 @@
 .lightboxNavigation{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--photo-muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .iconButton{display:inline-flex;justify-content:center;align-items:center;min-width:44px;min-height:44px;border:0;border-radius:50%;background:var(--surface);color:var(--photo-ink);font-size:18px!important;transition:transform var(--dur-press) var(--ease-out),background-color var(--dur-fast) ease}
 .srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
-@media(max-width:760px){.heading{align-items:flex-start;flex-direction:column;gap:20px;margin-bottom:48px}.intro{max-width:none}.storyHeader{grid-template-columns:1fr;gap:16px;margin-bottom:48px}.storyHeader>p{justify-self:start}.storyList{gap:56px}.photo:nth-child(even){text-align:left}.photo:nth-child(even) .caption{margin-left:0}.photoButton img{max-height:none}.lightbox{padding:max(12px,env(safe-area-inset-top,0px)) 20px max(16px,env(safe-area-inset-bottom,0px))}.lightbox[open]{gap:12px}.lightboxFooter{flex-direction:column-reverse;gap:16px}.lightboxNavigation{align-self:center}.lightboxCaption{max-height:22dvh}}
+@media(max-width:760px){.heading{align-items:flex-start;flex-direction:column;gap:20px;margin-bottom:48px}.intro{max-width:none}.storyHeader{grid-template-columns:1fr;gap:16px;margin-bottom:48px}.storyHeader>p{justify-self:start}.storyList{gap:56px}.stories{gap:80px}.photo:nth-child(even){text-align:left}.photo:nth-child(even) .caption{margin-left:0}.photoButton img{max-height:none}.lightbox{padding:max(12px,env(safe-area-inset-top,0px)) 20px max(16px,env(safe-area-inset-bottom,0px))}.lightbox[open]{gap:12px}.lightboxFooter{flex-direction:column-reverse;gap:16px}.lightboxNavigation{align-self:center}.lightboxCaption{max-height:22dvh}}
 @media(prefers-reduced-motion:reduce){.expand,.lightbox,.photoButton{transition:none}}
