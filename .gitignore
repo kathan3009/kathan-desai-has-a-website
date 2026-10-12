@@ -44,3 +44,6 @@ next-env.d.ts
 /screenshots/
 /test-results/
 /playwright-report/
+
+# Local project media, uploaded to R2 by hand
+scripts/project-assets/
