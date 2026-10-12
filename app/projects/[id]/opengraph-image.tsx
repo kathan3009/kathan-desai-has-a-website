@@ -15,5 +15,5 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   const project = conn ? await Project.findById(id).select("name description status image").lean() : null;
   if (!project) return ogCard({ title: "Projects by Kathan Desai", kicker: "AI, cybersecurity and useful side projects" });
   const image = typeof project.image === "string" && /^https?:\/\//.test(project.image) ? project.image : undefined;
-  return ogCard({ title: String(project.name), kicker: plainText(String(project.description || ""), 90) || projectStatusLabels[String(project.status)] || undefined, image });
+  return ogCard({ title: String(project.name), kicker: plainText(String(project.description || ""), 90) || projectStatusLabels[String(project.status)] || undefined, image, fit: "contain" });
 }

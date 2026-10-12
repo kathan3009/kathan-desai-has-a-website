@@ -9,7 +9,7 @@ export const OG_CONTENT_TYPE = "image/png";
 
 const font = (file: string) => readFile(join(process.cwd(), "assets", "fonts", file));
 
-export async function ogCard({ title, kicker, image }: { title: string; kicker?: string; image?: string }) {
+export async function ogCard({ title, kicker, image, fit = "cover" }: { title: string; kicker?: string; image?: string; fit?: "cover" | "contain" }) {
   const [regular, medium] = await Promise.all([font("newsreader-latin-400-normal.woff"), font("newsreader-latin-500-normal.woff")]);
   const clipped = title.length > 110 ? `${title.slice(0, 108).trim()}…` : title;
   const size = clipped.length > 70 ? 54 : clipped.length > 40 ? 66 : 80;
@@ -21,7 +21,7 @@ export async function ogCard({ title, kicker, image }: { title: string; kicker?:
         {image && (
           <div style={{ position: "absolute", right: 0, top: 0, width: 520, height: 630, display: "flex" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={image} alt="" width={520} height={630} style={{ objectFit: "cover", width: 520, height: 630 }} />
+            <img src={image} alt="" width={520} height={630} style={fit === "contain" ? { objectFit: "contain", width: 400, height: 400, margin: "115px 40px 115px 80px" } : { objectFit: "cover", width: 520, height: 630 }} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, #1d1d1f 0%, rgba(29,29,31,.55) 35%, rgba(29,29,31,0) 100%)", display: "flex" }} />
           </div>
         )}
