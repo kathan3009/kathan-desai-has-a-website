@@ -36,7 +36,7 @@ export default async function BlogPage({searchParams}:Props){
   </div>;
 }
 
-function PostItem({post,featured=false}:{post:Post;featured?:boolean}){const date=postDate(post.publishedAt);const hasMedia=!!(post.featuredImage||post.videoEmbed||extractYoutubeId(post.content));return <article className={featured?styles.featuredPost:`${styles.post} reveal`}>
+function PostItem({post,featured=false}:{post:Post;featured?:boolean}){const date=postDate(post.publishedAt);const hasMedia=!!(post.featuredImage||post.videoEmbed||extractYoutubeId(post.content));return <article className={featured?styles.featuredPost:styles.post}>
   <div className={styles.postCopy}><div className={styles.postMeta}>{featured&&<span>Featured</span>}{post.category&&<span>{post.category}</span>}</div><h2><Link href={`/blogs/${encodeURIComponent(post.slug)}`} prefetch={false}>{post.title}</Link></h2>{post.excerpt&&<p className={styles.excerpt}>{post.excerpt}</p>}<div className={styles.postMeta}>{date&&<time dateTime={date.iso}>{date.label}</time>}<span>{readingMinutes(post.content)} min read</span>{post.audioUrl&&<span>Audio</span>}</div></div>
   {featured&&hasMedia&&<Link href={`/blogs/${encodeURIComponent(post.slug)}`} prefetch={false} className={styles.postMedia} aria-label={`Read ${post.title}`} tabIndex={-1}><MediaBlock image={post.featuredImage} videoEmbed={post.videoEmbed} content={post.content} alt="" variant="blog-banner" className="w-full h-full" prioritizeVideo priority/></Link>}
 </article>}

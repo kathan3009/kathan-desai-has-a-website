@@ -27,7 +27,7 @@ export default async function WorkPage() {
             <p className="empty">No work experience added yet.</p>
           ) : (
             items.map((item) => (
-              <article key={item._id.toString()} className="info-row reveal">
+              <article key={item._id.toString()} className="info-row">
                 <div className="info-grid">
                   <div>
                     <p className="text-foreground font-semibold text-[21px] tracking-[-0.02em] leading-tight">{item.role}</p>

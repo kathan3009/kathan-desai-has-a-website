@@ -34,14 +34,14 @@ export default async function SkillsPage() {
           <p className="empty">No skills added yet.</p>
         ) : (
           <>
-            <div className="mb-14 rounded-[28px] bg-surface p-4 sm:p-8 reveal">
+            <div className="mb-14 rounded-[28px] bg-surface p-4 sm:p-8">
               <p className="text-muted text-[14px] mb-2 text-center">Hover a category to explore</p>
               <SkillsConstellation byCategory={byCategory} />
             </div>
 
             <div className="space-y-10">
               {Object.entries(byCategory).map(([category, skills]) => (
-                <section key={category} className="reveal">
+                <section key={category} >
                   <h2 className="text-[14px] text-muted mb-3">{category}</h2>
                   <div className="chip-row">
                     {skills.map((s) => (

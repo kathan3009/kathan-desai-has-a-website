@@ -31,7 +31,7 @@ export default async function FAQPage() {
             <p className="empty">No FAQ entries yet.</p>
           ) : (
             items.map((item) => (
-              <section key={item._id.toString()} className="info-row reveal">
+              <section key={item._id.toString()} className="info-row">
                 <h2 className="text-[21px] leading-tight mb-2">{item.question}</h2>
                 <p className="text-muted max-w-[680px]">{item.answer}</p>
               </section>

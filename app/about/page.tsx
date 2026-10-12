@@ -18,22 +18,19 @@ export default function AboutPage() {
         </header>
 
         <div className="about-moments">
-          <section className="reveal">
-            <span>01</span>
+          <section>
             <div>
               <h2>It started with four friends.</h2>
               <p>We began BugBase while we were still in college. The idea was simple: make it easier for companies and security researchers to work together, then keep building until it was useful.</p>
             </div>
           </section>
-          <section className="reveal">
-            <span>02</span>
+          <section>
             <div>
               <h2>The company became the education.</h2>
               <p>I left college before graduating because BugBase had become the work I wanted to do. It taught me how to make products, earn trust, change my mind, and keep going when the answer was not obvious.</p>
             </div>
           </section>
-          <section className="reveal">
-            <span>03</span>
+          <section>
             <div>
               <h2>Now, San Francisco.</h2>
               <p>I am here building Pentest Copilot Enterprise. New Delhi is still home in another sense. Away from the laptop, I write to understand what I am learning and photograph places that make me slow down.</p>

@@ -26,7 +26,7 @@ export default async function CertificationsPage() {
             <p className="empty">No certifications added yet.</p>
           ) : (
             items.map((item) => (
-              <article key={item._id.toString()} className="card reveal flex flex-col gap-1">
+              <article key={item._id.toString()} className="card flex flex-col gap-1">
                 <p className="text-foreground font-semibold text-[19px] tracking-[-0.02em] leading-tight">{item.name}</p>
                 <p className="text-muted">{item.issuer}</p>
                 <p className="text-muted text-[14px]">{item.date}</p>

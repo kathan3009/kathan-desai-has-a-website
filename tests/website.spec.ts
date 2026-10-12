@@ -8,9 +8,9 @@ test('home, dedicated routes, clocks, hidden terminal and status',async({page})=
  await page.goto('/');await expect(page.locator('body')).toHaveCSS('font-family',/system-ui|-apple-system/);await expect(page.getByRole('heading',{name:'I’m Kathan.'})).toBeVisible();
  await expect(page.getByText(/I started BugBase/)).toBeVisible();await expect(page.getByText(/building Pentest Copilot in San Francisco/)).toBeVisible();
  await expect(page.locator('footer a[href="https://x.com/heykathan"]')).toBeVisible();
- await expect(page.locator('.scene-fallback')).toBeVisible();await expect(page.locator('.hero-clocks .clock time')).toHaveCount(2);await expect(page.locator('.life-clocks .clock time')).toHaveCount(2);
+ await expect(page.locator('.scene-fallback')).toBeVisible();await expect(page.locator('.life-clocks .clock time')).toHaveCount(2);
  await expect(page.locator('.landing-chapter')).toHaveCount(5);await expect(page.locator('.landing-content').first()).toHaveCSS('position','relative');
- await page.evaluate(()=>scrollTo(0,innerHeight/2));await page.waitForTimeout(150);const transition=await page.locator('.hero-content,#bugbase .landing-content').evaluateAll(elements=>elements.map(element=>Number(getComputedStyle(element).opacity)));expect(transition.every(opacity=>opacity<.08)).toBeTruthy();await page.evaluate(()=>scrollTo(0,0));
+ await page.evaluate(()=>scrollTo(0,innerHeight/2));await page.waitForTimeout(150);const transition=await page.locator('.hero-content').evaluateAll(elements=>elements.map(element=>Number(getComputedStyle(element).opacity)));expect(transition.every(opacity=>opacity<.08)).toBeTruthy();expect(await page.locator('#bugbase .landing-content').evaluate(element=>Number(getComputedStyle(element).opacity))).toBe(1);await page.evaluate(()=>scrollTo(0,0));
  await expect(page.getByRole('button',{name:/terminal/i})).toHaveCount(0);
  await page.getByLabel('Reduce motion',{exact:true}).check();await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');await expect(page.locator('.scene canvas')).toHaveCount(0);await page.getByLabel('Reduce motion',{exact:true}).uncheck();await page.evaluate(()=>{(document.activeElement as HTMLElement | null)?.blur();});
  await page.keyboard.type('abracadabra');await expect(page.getByRole('dialog',{name:'Terminal'})).toBeVisible();
