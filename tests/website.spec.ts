@@ -31,7 +31,7 @@ test('mobile navigation and quiet motion work without horizontal overflow',async
 });
 test('real projects, article content and persistent reader settings',async({page})=>{
  test.skip(!real,'Run against Vercel with TEST_REAL_CONTENT=1');
- await page.goto('/projects');await expect(page.locator('.project-featured')).toHaveCount(2);await expect(page.locator('.project-item')).toHaveCount(6);
+ await page.goto('/projects');await expect(page.locator('.project-featured')).toHaveCount(2);await expect(page.locator('.project-item')).toHaveCount(7);
  const name=await page.locator('.project-featured h2').first().innerText();await page.locator('.project-featured').first().click();await expect(page.locator('main h1')).toHaveText(name);
  await page.goto('/blogs');await expect(page.locator('main article')).toHaveCount(12);const first=page.locator('main article a[href^="/blogs/"]').first();await expect(first).toBeVisible();await first.click();
  await expect(page.locator('#reading-article')).toBeVisible();await page.locator('summary[aria-controls="reading-settings"]').click();
