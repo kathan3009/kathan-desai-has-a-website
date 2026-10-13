@@ -1,6 +1,7 @@
 "use client";
 
-/* Remote originals keep their natural dimensions in the visual story and lightbox. */
+/* Remote originals keep their natural dimensions in the visual story and lightbox.
+   The story header names the category, so cards show only the caption. */
 /* eslint-disable @next/next/no-img-element */
 
 import {useState,useRef,useEffect,useCallback,useId} from "react";
@@ -43,7 +44,7 @@ function PhotoCard({photo,index,onClick}:{photo:PhotoItem;index:number;onClick:(
   return <figure className={styles.photo}><button type="button" className={styles.photoButton} onClick={onClick} aria-label={`Open photograph ${index+1}${photo.caption?`: ${photo.caption}`:""}`} aria-haspopup="dialog">
     {!failed&&<img src={photo.image} alt={photo.caption||`Photograph ${index+1}`} loading={index<2?"eager":"lazy"} fetchPriority={index===0?"high":"auto"} onError={()=>setFailed(true)}/>}
     {failed&&<span className={styles.imageError}>Preview unavailable. Open photograph.</span>}<span className={styles.expand} aria-hidden="true">Open <span>↗</span></span>
-  </button>{(photo.caption||photo.category)&&<figcaption className={styles.caption}><p>{photo.caption||`Photograph ${index+1}`}</p>{photo.category&&<span>{photo.category}</span>}</figcaption>}</figure>;
+  </button>{photo.caption&&<figcaption className={styles.caption}><p>{photo.caption}</p></figcaption>}</figure>;
 }
 
 function Lightbox({photos,currentIndex,onClose,onNavigate}:{photos:PhotoItem[];currentIndex:number;onClose:()=>void;onNavigate:(index:number)=>void}){

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
+import CopyCommand from "@/components/CopyCommand";
 import "./photoshop-mcp.css";
 
 const RELEASE = "https://github.com/kathan3009/photoshop-mcp/releases/latest";
@@ -92,8 +93,8 @@ export default function PhotoshopMcpPage() {
         <section className="psmcp-dev">
           <h2>For developers</h2>
           <p>The app is a thin shell over an MIT-licensed MCP server, CLI and agent skill that share one tested core — 165 end-to-end checks run against a live Photoshop. Prefer the terminal?</p>
-          <pre><code>{`git clone https://github.com/kathan3009/photoshop-mcp.git
-cd photoshop-mcp && scripts/install.sh`}</code></pre>
+          <CopyCommand command={`git clone https://github.com/kathan3009/photoshop-mcp.git
+cd photoshop-mcp && scripts/install.sh`} />
           <p>Everything verified live against Photoshop 27.11 is written up in the README: the quirks (new layers land inside a selected group, text sizes are points at document ppi, ExtendScript mis-parses nested ternaries) and how each one is handled.</p>
           <p><Link className="text-link" href="/blogs/photoshop-mcp-let-your-agent-work-in-photoshop">Read the build notes →</Link></p>
         </section>

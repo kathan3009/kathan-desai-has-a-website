@@ -41,8 +41,8 @@ test('real projects, article content and persistent reader settings',async({page
 });
 test('real photography supports visual stories, deep links, full-size viewing and Escape',async({page})=>{
  test.skip(!real,'Run against Vercel with TEST_REAL_CONTENT=1');
- await page.goto('/photography');await expect(page.getByRole('heading',{name:/mountains/i})).toBeVisible();await expect(page.getByRole('searchbox')).toHaveCount(0);
- const photos=page.locator('button[aria-label^="Open photograph "]');await expect(photos).toHaveCount(6);const photo=photos.first();await expect(photo).toBeVisible();await photo.click();
+ await page.goto('/photography');await expect(page.getByRole('heading',{name:'San Francisco'})).toBeVisible();await expect(page.getByRole('heading',{name:/mountains/i})).toBeVisible();await expect(page.getByRole('searchbox')).toHaveCount(0);
+ const photos=page.locator('button[aria-label^="Open photograph "]');await expect(photos).toHaveCount(13);const photo=photos.first();await expect(photo).toBeVisible();await photo.click();
  await expect(page.getByRole('dialog')).toBeVisible();await expect(page).toHaveURL(/photo=/);const url=page.url();await page.reload();
  await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);expect(page.url()).not.toEqual(url);
  const reopened=Date.now();await photo.click();await expect(page.getByRole('dialog')).toBeVisible();expect(Date.now()-reopened).toBeLessThan(1500);await page.keyboard.press('Escape');
