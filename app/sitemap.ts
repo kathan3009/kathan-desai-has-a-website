@@ -5,6 +5,7 @@ import Project from "@/models/Project";
 import Photo from "@/models/Photo";
 import { SITE_URL } from "@/lib/site";
 import { STATIC_POSTS } from "@/lib/static-posts";
+import { dedicatedProjectPage } from "@/lib/projects";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (conn) {
       const [posts, projects, photos] = await Promise.all([
         Blog.find({ isDraft: { $ne: true } }).select("slug publishedAt dateModified updatedAt featuredImage").lean(),
-        Project.find().select("updatedAt image").lean(),
+        Project.find().select("name updatedAt image").lean(),
         Photo.find().sort({ order: 1 }).select("image").lean(),
       ]);
       const staticSlugs = new Set(STATIC_POSTS.map((post) => post.slug));
@@ -44,7 +45,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
         images: typeof post.featuredImage === "string" && post.featuredImage.startsWith("http") ? [post.featuredImage] : undefined,
       })));
-      entries.push(...projects.map((project) => ({
+      // Projects with their own page are already listed with the static pages.
+      entries.push(...projects.filter((project) => !dedicatedProjectPage(String(project.name || ""))).map((project) => ({
         url: `${SITE_URL}/projects/${project._id}`,
         lastModified: new Date(project.updatedAt),
         changeFrequency: "monthly" as const,

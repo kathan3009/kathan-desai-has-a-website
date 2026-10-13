@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
 import Project from "@/models/Project";
 import { plainText } from "@/lib/seo";
-import { orderPublicProjects } from "@/lib/projects";
+import { orderPublicProjects, projectHref } from "@/lib/projects";
 import { AUTHOR, SITE_URL } from "@/lib/site";
 import { STATIC_POSTS } from "@/lib/static-posts";
 
@@ -24,7 +24,7 @@ export async function GET() {
       for (const post of dbPosts) if (!staticSlugs.has(String(post.slug))) posts.push(`- [${post.title}](${SITE_URL}/blogs/${encodeURIComponent(String(post.slug))}): ${String(post.excerpt || "") || plainText(String(post.content || ""), 200)}`);
       for (const project of orderPublicProjects(dbProjects.map((p) => ({ name: String(p.name), id: String(p._id), description: String(p.description || ""), liveUrl: String(p.liveUrl || ""), repoUrl: String(p.repoUrl || "") })))) {
         const links = [project.liveUrl && `live: ${project.liveUrl}`, project.repoUrl && `source: ${project.repoUrl}`].filter(Boolean).join(", ");
-        projects.push(`- [${project.name}](${SITE_URL}/projects/${project.id}): ${plainText(project.description, 200)}${links ? ` (${links})` : ""}`);
+        projects.push(`- [${project.name}](${SITE_URL}${projectHref(project)}): ${plainText(project.description, 200)}${links ? ` (${links})` : ""}`);
       }
     }
   } catch {

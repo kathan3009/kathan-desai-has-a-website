@@ -5,6 +5,7 @@
 
 import Link from 'next/link';
 import Clocks from './Clocks';
+import {projectHref} from '@/lib/projects';
 import './landing.css';
 
 export type LandingData={
@@ -31,7 +32,7 @@ export default function Landing({projects,posts,photos,available}:LandingData){
 
     <section className="bento" aria-label="Highlights">
       {product
-        ? <Link href={`/projects/${product.id}`} className="tile tile-dark span-2 row-2 rise" style={{'--i':i++} as React.CSSProperties}>
+        ? <Link href={projectHref(product)} className="tile tile-dark span-2 row-2 rise" style={{'--i':i++} as React.CSSProperties}>
             <small>Building now</small>
             <div><h2>{product.name}</h2><p>{product.description}</p><span className="tile-link">Open the project ›</span></div>
           </Link>
@@ -53,7 +54,7 @@ export default function Landing({projects,posts,photos,available}:LandingData){
 
       <div className="tile rise" style={{'--i':i++} as React.CSSProperties}>
         <small>Experiments</small>
-        <ul className="tile-list tile-list-tight">{experiments.slice(0,3).map(project=><li key={project.id}><Link href={`/projects/${project.id}`}>{project.name}</Link></li>)}{experiments.length===0&&<li><p>{available?'More projects soon.':'Temporarily unavailable.'}</p></li>}</ul>
+        <ul className="tile-list tile-list-tight">{experiments.slice(0,3).map(project=><li key={project.id}><Link href={projectHref(project)}>{project.name}</Link></li>)}{experiments.length===0&&<li><p>{available?'More projects soon.':'Temporarily unavailable.'}</p></li>}</ul>
         <Link className="tile-link" href="/projects">All projects ›</Link>
       </div>
 
