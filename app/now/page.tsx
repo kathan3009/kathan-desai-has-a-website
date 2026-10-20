@@ -13,7 +13,7 @@ export default function NowPage() {
         <h1>In San Francisco, building Pentest Copilot Enterprise.</h1>
         <p className="page-description">Pentest Copilot Enterprise is the main thing I am building. The work is making security testing feel clearer, faster, and more useful for the teams who do it every day.</p>
       </header>
-      <Link className="text-link" href="/projects">See what I am working on →</Link>
+      <Link className="text-link" href="/projects">See what I am working on</Link>
     </article>
   );
 }

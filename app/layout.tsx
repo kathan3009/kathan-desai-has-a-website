@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-// The interface uses the platform's own type. Archivo Black only dresses the
-// web-slinger mode, and Newsreader is the reader's serif.
+import localFont from "next/font/local";
+// Archivo Black only dresses the web-slinger mode, and Newsreader is the
+// reader's serif.
 import '@fontsource/archivo-black/latin-400.css';
 import '@fontsource/newsreader/latin-400.css';
 import '@fontsource/newsreader/latin-500.css';
@@ -16,6 +17,24 @@ import { PersonSchema } from "@/components/schema/Person";
 import { OrganizationSchema } from "@/components/schema/Organization";
 import { WebSiteSchema } from "@/components/schema/WebSite";
 import { AUTHOR, FEED_ALTERNATE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
+
+// Bricolage Grotesque sets every word on the site, from captions to the title
+// card; its optical size and width axes do the work of a second family.
+// Martian Mono only draws the characters in the ASCII scenes.
+const bricolage = localFont({
+  src: "../assets/fonts/bricolage-grotesque-latin-standard-normal.woff2",
+  variable: "--font-bricolage",
+  weight: "200 800",
+  display: "swap",
+  declarations: [{ prop: "font-stretch", value: "75% 100%" }],
+});
+const martian = localFont({
+  src: "../assets/fonts/martian-mono-latin-standard-normal.woff2",
+  variable: "--font-martian",
+  weight: "100 800",
+  display: "swap",
+  declarations: [{ prop: "font-stretch", value: "75% 112.5%" }],
+});
 
 // Restores the mode before first paint so there is no flash of the default theme.
 const SPIDEY_INIT = `try{if(localStorage.getItem("web-slinger-mode")==="on"){document.documentElement.dataset.theme="spidey"}}catch(e){}`;
@@ -60,8 +79,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#f1f3f6" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1320" },
   ],
 };
 
@@ -73,6 +92,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      className={`${bricolage.variable} ${martian.variable}`}
       suppressHydrationWarning
     >
         <head>

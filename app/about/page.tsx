@@ -18,7 +18,7 @@ export default function AboutPage() {
             <h1>I build things.</h1>
             <p className="about-lede">I am Kathan, founder of BugBase and the person building Pentest Copilot Enterprise.</p>
           </header>
-          <Link href="/photography" className="tile tile-photo"><img src="/images/monastery-preview.webp" alt="Key Monastery under snow, one of my photographs" /><span>Where I go to slow down ›</span></Link>
+          <Link href="/photography" className="tile tile-photo"><img src="/images/monastery-preview.webp" alt="Key Monastery under snow, one of my photographs" /><span>Where I go to slow down</span></Link>
         </div>
 
         <div className="about-moments">
@@ -45,9 +45,9 @@ export default function AboutPage() {
         <footer className="about-next">
           <p>The useful version of my story is in the things themselves.</p>
           <div>
-            <Link href="/projects">See the work →</Link>
-            <Link href="/blogs">Read the notes →</Link>
-            <Link href="/photography">See the photographs →</Link>
+            <Link className="pill" href="/projects">See the work</Link>
+            <Link className="pill-quiet" href="/blogs">Read the notes</Link>
+            <Link className="pill-quiet" href="/photography">See the photographs</Link>
           </div>
         </footer>
       </article>
