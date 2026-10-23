@@ -187,6 +187,17 @@ OUTRO: Brief. Natural sign-off. Maybe a takeaway or "that was good, thanks for b
 
       return adminJson({ audioUrl });
     } catch (err) {
+      // Provider details can contain request content or credentials. Return only
+      // actionable, fixed messages to the authenticated editor.
+      if (err instanceof OpenAI.APIError) {
+        if (err.status === 401) return adminJson({ error: "Audio generation failed: the OpenAI API key is invalid or expired. Update OPENAI_API_KEY in the production environment." }, 503);
+        if (err.status === 403) return adminJson({ error: "Audio generation failed: the OpenAI project does not have access to the required model." }, 503);
+        if (err.code === "insufficient_quota") return adminJson({ error: "Audio generation failed: the OpenAI project has no available API quota. Check its billing balance and spending limit." }, 503);
+        if (err.status === 429) return adminJson({ error: "Audio generation hit an OpenAI rate limit. Wait a few minutes before trying again." }, 429);
+        if (err.status === 400) return adminJson({ error: "OpenAI rejected the audio generation request. The article is saved, but no audio was attached." }, 502);
+        if (err.status === 404) return adminJson({ error: "The configured OpenAI audio or script model is unavailable to this project." }, 503);
+        return adminJson({ error: "The OpenAI service could not complete audio generation. The article is saved; try again later." }, 502);
+      }
       return adminErrorResponse(err);
     }
   });

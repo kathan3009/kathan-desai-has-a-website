@@ -41,6 +41,7 @@ export function MermaidDiagram({ code }: { code: string }) {
         const colors = palettes[theme];
         mermaid.initialize({
           startOnLoad: false,
+          htmlLabels: false,
           theme: "base",
           themeVariables: {
             darkMode: theme === "dark", background: colors.paper,
