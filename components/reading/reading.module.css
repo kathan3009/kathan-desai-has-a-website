@@ -187,7 +187,7 @@
 .markdown input[type="checkbox"] { margin-right: .6em; accent-color: var(--reading-link, #151515); }
 .markdown blockquote { padding-left: 1.1em; border-left: 3px solid var(--reading-border); margin: 1.7em 0; font-style: italic; }
 .markdown hr { border: 0; border-top: 1px solid var(--reading-border); margin: 2.5em 0; }
-.markdown img { display: block; max-width: 100%; height: auto; margin: 1.5em auto; border-radius: 14px; }
+.markdown img { display: block; width: auto; max-width: 100%; height: auto; object-fit: contain; margin: 1.5em auto; border-radius: 14px; }
 .markdown :is(video, iframe, audio) { max-width: 100%; }
 .markdown code { font-family: var(--font-mono); font-size: .78em; background: var(--reading-card); padding: .15em .35em; border-radius: 6px; }
 .markdown pre { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; background: var(--reading-card); border-radius: 14px; padding: 1.2rem; margin: 1.5em 0; font-size: .78em; line-height: 1.7; tab-size: 2; overflow-wrap: normal; }

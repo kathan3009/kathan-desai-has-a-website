@@ -6,15 +6,16 @@ import { extractYoutubeId, getYoutubeThumbnailUrl } from "@/lib/youtube";
 
 type MediaVariant = "project-card" | "blog-banner" | "blog-thumbnail" | "blog-card" | "blog-hero";
 
+// Preserve complete artwork, diagrams and text-bearing covers inside the site’s media frames.
 const variantConfig: Record<
   MediaVariant,
   { aspect: string; fit: "contain" | "cover"; size?: string; padding?: string }
 > = {
   "project-card": { aspect: "", fit: "contain", padding: "p-2", size: "w-full h-full" },
-  "blog-banner": { aspect: "", fit: "cover", padding: "", size: "w-full h-full" },
+  "blog-banner": { aspect: "", fit: "contain", padding: "", size: "w-full h-full" },
   "blog-thumbnail": { aspect: "aspect-[3/2]", fit: "contain", size: "w-24 h-16 shrink-0", padding: "p-1" },
   "blog-card": { aspect: "aspect-[8/5]", fit: "contain", size: "w-32 h-20 shrink-0", padding: "p-1" },
-  "blog-hero": { aspect: "aspect-video", fit: "cover", padding: "" },
+  "blog-hero": { aspect: "aspect-video", fit: "contain", padding: "" },
 };
 
 const variantSizes: Record<MediaVariant, string> = {
@@ -26,10 +27,10 @@ const variantSizes: Record<MediaVariant, string> = {
 };
 
 function isOptimizable(url: string): boolean {
-  if (url.startsWith("/")) return true;
+  if (url.startsWith("/") && !url.startsWith("//")) return true;
   try {
     const u = new URL(url);
-    return u.hostname.endsWith(".r2.dev") || u.hostname === "img.youtube.com";
+    return u.protocol === "https:" && (u.hostname === "pub-e6b13b1038d84eb5b4a3c0cf7bf0e50a.r2.dev" || (u.hostname === "img.youtube.com" && u.pathname.startsWith("/vi/")));
   } catch {
     return false;
   }
