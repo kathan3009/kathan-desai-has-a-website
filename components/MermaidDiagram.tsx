@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { useContext, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ReadingThemeContext } from "./reading/ReaderShell";
 import styles from "./reading/reading.module.css";
 
@@ -31,12 +31,34 @@ export function MermaidDiagram({ code }: { code: string }) {
   const [result, setResult] = useState<{ code: string; theme: string; error?: string } | null>(null);
   const current = result?.code === code && result.theme === theme ? result : null;
 
+  useLayoutEffect(() => {
+    if (!current || current.error) return;
+    const drawing = ref.current?.querySelector("svg");
+    if (!drawing) return;
+    // Mermaid measures in a temporary container. Measure again in the visible
+    // reading surface so inherited styles cannot leave nodes outside the SVG.
+    const bounds = drawing.getBBox();
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    const padding = 16;
+    const width = Math.ceil(bounds.width + padding * 2);
+    const height = Math.ceil(bounds.height + padding * 2);
+    drawing.setAttribute("viewBox", `${bounds.x - padding} ${bounds.y - padding} ${width} ${height}`);
+    drawing.setAttribute("width", String(width));
+    drawing.setAttribute("height", String(height));
+    drawing.style.aspectRatio = `${width} / ${height}`;
+    drawing.dataset.compact = String(width <= 720);
+  }, [current]);
+
   useEffect(() => {
     let cancelled = false;
     renderQueue = renderQueue.catch(() => {}).then(async () => {
       if (cancelled) return;
       try {
         const { default: mermaid } = await import("mermaid");
+        if (cancelled) return;
+        // Use final font metrics, including on a first visit or a slow connection.
+        await document.fonts.load('14px "Manrope"');
+        await document.fonts.ready;
         if (cancelled) return;
         const colors = palettes[theme];
         mermaid.initialize({
@@ -62,10 +84,6 @@ export function MermaidDiagram({ code }: { code: string }) {
         const { svg, bindFunctions } = await mermaid.render(id, code);
         if (!cancelled && ref.current) {
           ref.current.innerHTML = svg;
-          // Compact article diagrams fit the column; wide technical graphs keep
-          // their readable native size and can still scroll horizontally.
-          const drawing = ref.current.querySelector("svg");
-          if (drawing && drawing.viewBox.baseVal.width <= 720) drawing.dataset.compact = "true";
           bindFunctions?.(ref.current);
           setResult({ code, theme });
         }

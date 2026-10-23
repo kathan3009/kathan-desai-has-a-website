@@ -58,3 +58,25 @@ test('search and answer engines get a sitemap, feed, llms.txt, share image and o
  await page.goto('/');await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content',/opengraph-image/);await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href','https://www.kathandesai.com');await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveCount(1);
  for(const route of ['/','/about','/projects','/blogs','/photography','/photoshop-mcp']){await page.goto(route);expect(await page.locator('h1').count()).toBe(1);}
 });
+
+
+test('article diagrams keep every node and label inside the SVG at reader widths', async ({ page }) => {
+ test.skip(!real, 'Run against Vercel with TEST_REAL_CONTENT=1');
+ for (const slug of ['how-id-hand-a-complex-feature-to-a-coding-agent', 'why-i-think-everyone-getting-into-ai-should-build-a-small-ml-project']) {
+  await page.goto(`/blogs/${slug}`);
+  for (const width of [390, 1280]) {
+   await page.setViewportSize({ width, height: 900 });
+   await expect(page.locator('figure[aria-label="Article diagram"][aria-busy="true"]')).toHaveCount(0);
+   const drawings = page.locator('figure[aria-label="Article diagram"] svg');
+   await expect(drawings).toHaveCount(slug.startsWith('how-') ? 3 : 4);
+   const clipped = await drawings.evaluateAll(svgs => svgs.flatMap(svg => {
+    const frame = svg.getBoundingClientRect();
+    return Array.from(svg.querySelectorAll('.node, .edgeLabel, text')).filter(item => {
+     const box = item.getBoundingClientRect();
+     return box.width > 0 && box.height > 0 && (box.left < frame.left - 1 || box.right > frame.right + 1 || box.top < frame.top - 1 || box.bottom > frame.bottom + 1);
+    }).map(item => item.textContent);
+   }));
+   expect(clipped).toEqual([]);
+  }
+ }
+});
