@@ -8,7 +8,9 @@ import Blog from "@/models/Blog";
 import { uploadBufferToR2 } from "@/lib/r2";
 import OpenAI from "openai";
 
+export const maxDuration = 300;
 const TTS_MAX_CHARS = 4096;
+const TTS_CONCURRENCY = 2;
 
 function stripMarkdown(text: string): string {
   return text
@@ -89,6 +91,7 @@ export async function POST(
       throw new AdminRequestError(400, "Blog has no content to convert");
     }
 
+    let stage: "script" | "speech" | "storage" = "script";
     try {
       const openai = new OpenAI({ apiKey });
 
@@ -161,26 +164,30 @@ OUTRO: Brief. Natural sign-off. Maybe a takeaway or "that was good, thanks for b
         }
       }
 
-      const segmentsRes = await Promise.all(
-        ttsSegments.map((s) =>
-          openai.audio.speech.create({
-            model: "gpt-4o-mini-tts",
-            voice: s.voice,
-            input: s.input,
-            response_format: "mp3",
-            instructions: s.instructions,
+      stage = "speech";
+      const buffers: Buffer[] = [];
+      // Keep dialogue order while limiting simultaneous provider requests.
+      for (let offset = 0; offset < ttsSegments.length; offset += TTS_CONCURRENCY) {
+        const batch = await Promise.all(
+          ttsSegments.slice(offset, offset + TTS_CONCURRENCY).map(async (segment) => {
+            const response = await openai.audio.speech.create({
+              model: "gpt-4o-mini-tts",
+              voice: segment.voice,
+              input: segment.input,
+              response_format: "mp3",
+              instructions: segment.instructions,
+            });
+            return Buffer.from(await response.arrayBuffer());
           })
-        )
-      );
-
-      const buffers = await Promise.all(
-        segmentsRes.map((r) => r.arrayBuffer().then((ab) => Buffer.from(ab)))
-      );
+        );
+        buffers.push(...batch);
+      }
       const combined = Buffer.concat(buffers);
 
       const slug = (blog.slug as string).replace(/[^a-z0-9-_]/gi, "-");
       const key = `blog-audio/${slug}.mp3`;
 
+      stage = "storage";
       const audioUrl = await uploadBufferToR2(combined, "audio/mpeg", key);
 
       await Blog.findByIdAndUpdate(id, { audioUrl });
@@ -190,10 +197,13 @@ OUTRO: Brief. Natural sign-off. Maybe a takeaway or "that was good, thanks for b
       // Provider details can contain request content or credentials. Return only
       // actionable, fixed messages to the authenticated editor.
       if (err instanceof OpenAI.APIError) {
+        const quota = err.code === "insufficient_quota" || (err.status === 429 && /quota|billing|credit/i.test(err.message));
+        // Log only fixed categories, never raw provider messages or article text.
+        console.warn("Blog audio provider failure", { stage, status: err.status, category: quota ? "quota" : err.status === 429 ? "rate_limit" : "provider_error" });
         if (err.status === 401) return adminJson({ error: "Audio generation failed: the OpenAI API key is invalid or expired. Update OPENAI_API_KEY in the production environment." }, 503);
         if (err.status === 403) return adminJson({ error: "Audio generation failed: the OpenAI project does not have access to the required model." }, 503);
-        if (err.code === "insufficient_quota") return adminJson({ error: "Audio generation failed: the OpenAI project has no available API quota. Check its billing balance and spending limit." }, 503);
-        if (err.status === 429) return adminJson({ error: "Audio generation hit an OpenAI rate limit. Wait a few minutes before trying again." }, 429);
+        if (quota) return adminJson({ error: "Audio generation failed: the OpenAI project has no available API quota. Check its billing balance and spending limit." }, 503);
+        if (err.status === 429) return adminJson({ error: `OpenAI rate-limited ${stage === "script" ? "podcast script creation" : "speech generation"}. Wait a few minutes before trying again.` }, 429);
         if (err.status === 400) return adminJson({ error: "OpenAI rejected the audio generation request. The article is saved, but no audio was attached." }, 502);
         if (err.status === 404) return adminJson({ error: "The configured OpenAI audio or script model is unavailable to this project." }, 503);
         return adminJson({ error: "The OpenAI service could not complete audio generation. The article is saved; try again later." }, 502);

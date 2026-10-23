@@ -52,6 +52,8 @@ function fixture(overrides = {}, dependencies = {}) {
       process: { env },
       crypto: globalThis.crypto,
       TextEncoder,
+      Buffer,
+      console: { warn() {} },
       URL,
       Uint8Array,
       btoa,
@@ -458,4 +460,51 @@ test("audio generation checks Origin, auth, record ID and DB availability before
   assert.deepEqual(f.calls, []);
   await expectError(await handler.POST(mutation(path), params), 503);
   assert.deepEqual(f.calls, ["db"]);
+});
+
+
+test("audio generation limits request bursts, preserves dialogue order, and reports quota safely", async () => {
+  let active = 0, peak = 0, uploaded, saved, fail = false;
+  class ProviderError extends Error {
+    status = 429;
+    code = "insufficient_quota";
+  }
+  class Provider {
+    static APIError = ProviderError;
+    chat = { completions: { create: async () => {
+      if (fail) throw new ProviderError("private provider details and quota");
+      return { choices: [{ message: { content: "HOST: first\nGUEST: second\nHOST: third\nGUEST: fourth" } }] };
+    } } };
+    audio = { speech: { create: async ({ input }) => {
+      peak = Math.max(peak, ++active);
+      await new Promise(resolve => setTimeout(resolve, input === "first" ? 15 : 1));
+      active--;
+      return { arrayBuffer: async () => Buffer.from(input + "|") };
+    } } };
+  }
+  const f = fixture({ OPENAI_API_KEY: "local-test-only" }, {
+    "@/lib/db": { default: async () => ({}) },
+    "@/models/Blog": { default: {
+      findById: async () => ({ title: "Test", slug: "test", content: "Article content" }),
+      findByIdAndUpdate: async (_id, body) => { saved = body.audioUrl; },
+    } },
+    "@/lib/r2": { uploadBufferToR2: async (buffer) => { uploaded = buffer.toString(); return "https://example.test/audio.mp3"; } },
+    openai: { default: Provider },
+  });
+  await signIn(f);
+  const handler = f.load("app/api/admin/blog/[id]/generate-audio/route.ts");
+  const path = `/api/admin/blog/${recordId}/generate-audio`;
+  const result = await handler.POST(mutation(path), params);
+  assert.equal(result.status, 200);
+  assert.equal(peak, 2);
+  assert.equal(uploaded, "first|second|third|fourth|");
+  assert.equal(saved, "https://example.test/audio.mp3");
+  fail = true; uploaded = saved = undefined;
+  const error = await handler.POST(mutation(path), params);
+  assert.equal(error.status, 503);
+  const body = await error.text();
+  assert.match(body, /no available API quota/);
+  assert.doesNotMatch(body, /private provider details/);
+  assert.equal(uploaded, undefined);
+  assert.equal(saved, undefined);
 });
