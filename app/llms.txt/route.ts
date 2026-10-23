@@ -1,5 +1,6 @@
 // A plain-text map of the site for language models, in the llms.txt convention:
 // who this is, what is here, and where each thing lives.
+import { blogPresentation } from "@/lib/blog-presentation";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
 import Project from "@/models/Project";
@@ -11,17 +12,17 @@ import { STATIC_POSTS } from "@/lib/static-posts";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const posts: string[] = STATIC_POSTS.map((post) => `- [${post.title}](${SITE_URL}/blogs/${post.slug}): ${post.excerpt}`);
+  const posts: string[] = STATIC_POSTS.map((post) => `- [${post.title}](${SITE_URL}/blogs/${post.slug}): ${blogPresentation(post).description}`);
   const projects: string[] = [];
   try {
     const conn = await dbConnect();
     if (conn) {
       const staticSlugs = new Set(STATIC_POSTS.map((post) => post.slug));
       const [dbPosts, dbProjects] = await Promise.all([
-        Blog.find({ isDraft: { $ne: true } }).select("title slug excerpt content").sort({ publishedAt: -1 }).lean(),
+        Blog.find({ isDraft: { $ne: true } }).select("title slug excerpt content seoDescription").sort({ publishedAt: -1 }).lean(),
         Project.find().sort({ order: 1 }).select("name description liveUrl repoUrl").lean(),
       ]);
-      for (const post of dbPosts) if (!staticSlugs.has(String(post.slug))) posts.push(`- [${post.title}](${SITE_URL}/blogs/${encodeURIComponent(String(post.slug))}): ${String(post.excerpt || "") || plainText(String(post.content || ""), 200)}`);
+      for (const post of dbPosts) if (!staticSlugs.has(String(post.slug))) posts.push(`- [${post.title}](${SITE_URL}/blogs/${encodeURIComponent(String(post.slug))}): ${blogPresentation({ slug: String(post.slug), title: String(post.title), excerpt: String(post.excerpt || ""), content: String(post.content || ""), seoDescription: String(post.seoDescription || "") }).description}`);
       for (const project of orderPublicProjects(dbProjects.map((p) => ({ name: String(p.name), id: String(p._id), description: String(p.description || ""), liveUrl: String(p.liveUrl || ""), repoUrl: String(p.repoUrl || "") })))) {
         const links = [project.liveUrl && `live: ${project.liveUrl}`, project.repoUrl && `source: ${project.repoUrl}`].filter(Boolean).join(", ");
         projects.push(`- [${project.name}](${SITE_URL}${projectHref(project)}): ${plainText(project.description, 200)}${links ? ` (${links})` : ""}`);

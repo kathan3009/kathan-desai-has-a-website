@@ -11,8 +11,10 @@ import { ReaderShell } from "@/components/reading/ReaderShell";
 import { postDate, readingMinutes } from "@/components/reading/post-utils";
 import styles from "@/components/reading/reading.module.css";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
-import { plainText } from "@/lib/seo";
-import { SITE_URL } from "@/lib/site";
+import { blogPresentation, blogModifiedDate } from "@/lib/blog-presentation";
+import { ArticleContents } from "@/components/reading/ArticleContents";
+import { RelatedReading } from "@/components/reading/RelatedReading";
+import { SITE_URL, FEED_ALTERNATE } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -27,20 +29,20 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const post = await getPost(slug);
   if (!post) return { title: "Not Found", robots: { index: false } };
-  const description = post.excerpt || plainText(post.content);
+  const { title, description } = blogPresentation(post);
   const image = post.featuredImage ? [post.featuredImage] : [];
   return {
-    title: post.title,
+    title: { absolute: `${title} | Kathan Desai` },
     description,
     authors: [{ name: post.author?.name || "Kathan Desai", url: post.author?.url || "/about" }],
-    alternates: { canonical: `/blogs/${encodeURIComponent(post.slug)}` },
+    alternates: { canonical: `/blogs/${encodeURIComponent(post.slug)}`, types: FEED_ALTERNATE },
     openGraph: {
       type: "article",
-      title: post.title,
+      title,
       description,
       url: `/blogs/${encodeURIComponent(post.slug)}`,
       publishedTime: postDate(post.publishedAt)?.iso,
-      modifiedTime: postDate(post.dateModified || post.updatedAt || post.publishedAt)?.iso,
+      modifiedTime: postDate(blogModifiedDate(post))?.iso,
       authors: [post.author?.name || "Kathan Desai"],
       section: post.category || undefined,
       tags: Array.isArray(post.tags) && post.tags.length ? post.tags.map(String) : undefined,
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: Props) {
     },
     twitter: {
       card: "summary_large_image" as const,
-      title: post.title,
+      title,
       description,
       images: image,
     },
@@ -62,8 +64,9 @@ export default async function BlogPostPage({ params }: Props) {
 
   const url = `${SITE_URL}/blogs/${encodeURIComponent(post.slug)}`;
 
+  const presentation = blogPresentation(post);
   const published = postDate(post.publishedAt);
-  const modified = postDate(post.dateModified || post.updatedAt || post.publishedAt);
+  const modified = postDate(blogModifiedDate(post));
 
   return (
     <>
@@ -77,7 +80,7 @@ export default async function BlogPostPage({ params }: Props) {
       />
       <ArticleSchema
         headline={post.title}
-        description={post.excerpt || plainText(post.content)}
+        description={presentation.description}
         keywords={Array.isArray(post.tags) ? post.tags.map(String) : undefined}
         section={post.category || undefined}
         wordCount={post.content.trim().split(/\s+/).filter(Boolean).length}
@@ -94,11 +97,12 @@ export default async function BlogPostPage({ params }: Props) {
             {post.category && <Link className={styles.articleCategory} href={`/blogs?category=${encodeURIComponent(post.category)}`}>{post.category}</Link>}
             <h1 id="article-title">{post.title}</h1>
             <div className={styles.byline}>
-              {post.author?.name && <span>{post.author.name}</span>}
+              <Link href={post.author?.url || "/about"}>{post.author?.name || "Kathan Desai"}</Link>
               {published && <time dateTime={published.iso}>{published.label}</time>}
+              {modified && published && modified.label !== published.label && <span>Updated <time dateTime={modified.iso}>{modified.label}</time></span>}
               <span>{readingMinutes(post.content)} min read</span>
             </div>
-            {post.excerpt && <p className={styles.lede}>{post.excerpt}</p>}
+            {presentation.summary && <p className={styles.lede}>{presentation.summary}</p>}
           </header>
           {(post.featuredImage || post.videoEmbed || (post.content && (post.content.includes("youtube") || post.content.includes("youtu.be")))) && (
             <div className={styles.heroMedia}>
@@ -127,7 +131,9 @@ export default async function BlogPostPage({ params }: Props) {
               <a href={post.audioUrl} download>Download audio</a>
             </section>
           )}
+          <ArticleContents content={post.content} />
           <MarkdownRenderer content={post.content} />
+          <RelatedReading slug={post.slug} />
           <footer className={styles.articleFooter}>
             <Link href="/blogs">Back to all writing</Link>
             <div className="flex items-center gap-3 shrink-0">

@@ -14,6 +14,7 @@ export function plainText(markdown: string, max = 160): string {
     .replace(/\s+/g, " ")
     .trim();
   if (text.length <= max) return text;
-  const cut = text.slice(0, max - 1);
-  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 80)).trim()}…`;
+  const cut = text.slice(0, Math.max(0, max - 1));
+  const boundary = cut.lastIndexOf(" ");
+  return `${(boundary > max / 2 ? cut.slice(0, boundary) : cut).trim()}…`;
 }

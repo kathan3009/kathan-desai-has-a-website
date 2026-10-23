@@ -4,6 +4,7 @@ import Blog from "@/models/Blog";
 import Project from "@/models/Project";
 import Photo from "@/models/Photo";
 import { SITE_URL } from "@/lib/site";
+import { blogModifiedDate } from "@/lib/blog-presentation";
 import { STATIC_POSTS } from "@/lib/static-posts";
 import { dedicatedProjectPage } from "@/lib/projects";
 
@@ -28,7 +29,7 @@ const staticPages: MetadataRoute.Sitemap = [
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [...staticPages];
-  entries.push(...STATIC_POSTS.map((post) => ({ url: `${SITE_URL}/blogs/${post.slug}`, lastModified: new Date(post.publishedAt), changeFrequency: "monthly" as const, priority: 0.7, images: post.image ? [`${SITE_URL}${post.image}`] : undefined })));
+  entries.push(...STATIC_POSTS.map((post) => ({ url: `${SITE_URL}/blogs/${post.slug}`, lastModified: blogModifiedDate(post), changeFrequency: "monthly" as const, priority: 0.7, images: post.image ? [`${SITE_URL}${post.image}`] : undefined })));
   try {
     const conn = await dbConnect();
     if (conn) {
@@ -40,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const staticSlugs = new Set(STATIC_POSTS.map((post) => post.slug));
       entries.push(...posts.filter((post) => !staticSlugs.has(String(post.slug))).map((post) => ({
         url: `${SITE_URL}/blogs/${encodeURIComponent(String(post.slug))}`,
-        lastModified: new Date(post.dateModified || post.updatedAt || post.publishedAt),
+        lastModified: blogModifiedDate({ publishedAt: post.publishedAt as Date, dateModified: post.dateModified as Date }),
         changeFrequency: "monthly" as const,
         priority: 0.7,
         images: typeof post.featuredImage === "string" && post.featuredImage.startsWith("http") ? [post.featuredImage] : undefined,

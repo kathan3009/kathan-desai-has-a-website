@@ -1,6 +1,7 @@
 import { isValidElement, type ReactElement } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { remarkArticleHeadings } from "@/lib/article-headings";
 import { MermaidDiagram } from "./MermaidDiagram";
 import styles from "./reading/reading.module.css";
 
@@ -38,6 +39,6 @@ const components: Components = {
 
 export function MarkdownRenderer({ content }: { content: string }) {
   return <div className={styles.markdown}>
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>{content}</ReactMarkdown>
+    <ReactMarkdown remarkPlugins={[remarkGfm, remarkArticleHeadings]} components={components}>{content}</ReactMarkdown>
   </div>;
 }

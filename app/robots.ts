@@ -2,8 +2,9 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 
 // Answer engines that fetch a page to cite it are welcome: being quoted with a
-// link is the point of publishing. Crawlers that only collect training data
-// stay out. Flip an agent between the two lists to change that policy.
+// link is the point of publishing. Google-Extended is an explicit exception:
+// its one control enables both Gemini grounding and Gemini training. Other
+// training crawlers remain blocked.
 const answerEngines = [
   "OAI-SearchBot", // ChatGPT search index
   "ChatGPT-User", // ChatGPT fetching a page for a user
@@ -13,12 +14,12 @@ const answerEngines = [
   "Perplexity-User",
   "DuckAssistBot",
   "Applebot",
+  "Google-Extended", // Gemini grounding + training (Google offers no separate switches)
 ];
 const trainingCrawlers = [
   "GPTBot",
   "ClaudeBot",
   "anthropic-ai",
-  "Google-Extended",
   "CCBot",
   "Bytespider",
   "Meta-ExternalAgent",

@@ -1,6 +1,6 @@
+import { blogPresentation } from "@/lib/blog-presentation";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
-import { plainText } from "@/lib/seo";
 import { AUTHOR, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { STATIC_POSTS } from "@/lib/static-posts";
 
@@ -11,15 +11,15 @@ const escape = (value: string) => value.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;
 type Item = { title: string; url: string; date: Date; description: string; category?: string };
 
 export async function GET() {
-  const items: Item[] = STATIC_POSTS.map((post) => ({ title: post.title, url: `${SITE_URL}/blogs/${post.slug}`, date: new Date(post.publishedAt), description: post.excerpt }));
+  const items: Item[] = STATIC_POSTS.map((post) => ({ title: post.title, url: `${SITE_URL}/blogs/${post.slug}`, date: new Date(post.publishedAt), description: blogPresentation(post).description }));
   try {
     const conn = await dbConnect();
     if (conn) {
       const staticSlugs = new Set(STATIC_POSTS.map((post) => post.slug));
-      const posts = await Blog.find({ isDraft: { $ne: true } }).select("title slug excerpt content publishedAt category").sort({ publishedAt: -1 }).limit(50).lean();
+      const posts = await Blog.find({ isDraft: { $ne: true } }).select("title slug excerpt content seoDescription publishedAt category").sort({ publishedAt: -1 }).limit(50).lean();
       for (const post of posts) {
         if (staticSlugs.has(String(post.slug))) continue;
-        items.push({ title: String(post.title), url: `${SITE_URL}/blogs/${encodeURIComponent(String(post.slug))}`, date: new Date(post.publishedAt), description: String(post.excerpt || "") || plainText(String(post.content || ""), 300), category: post.category ? String(post.category) : undefined });
+        items.push({ title: String(post.title), url: `${SITE_URL}/blogs/${encodeURIComponent(String(post.slug))}`, date: new Date(post.publishedAt), description: blogPresentation({ slug: String(post.slug), title: String(post.title), excerpt: String(post.excerpt || ""), content: String(post.content || ""), seoDescription: String(post.seoDescription || "") }).description, category: post.category ? String(post.category) : undefined });
       }
     }
   } catch {
