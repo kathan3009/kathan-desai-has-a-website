@@ -41,6 +41,8 @@ const SPIDEY_INIT = `try{if(localStorage.getItem("web-slinger-mode")==="on"){doc
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // Keep this public tag in place so Search Console ownership stays verified.
+  verification: { google: "ynzCupXVazi3KTZAA4n23HErWli9WgrK2BOZeNJYt04" },
   title: {
     default: SITE_TITLE,
     template: "Kathan Desai | %s",
