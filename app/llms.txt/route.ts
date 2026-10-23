@@ -43,7 +43,7 @@ Contact: ${AUTHOR.email}. Elsewhere: ${AUTHOR.sameAs.join(", ")}.
 - [Projects](${SITE_URL}/projects): the company, the product, and smaller experiments and tools
 - [Writing](${SITE_URL}/blogs): build notes and essays, mostly on offensive security and AI agents
 - [Photography](${SITE_URL}/photography): photographs from the Himalaya and San Francisco
-- [Photoshop MCP](${SITE_URL}/photoshop-mcp): a free macOS app that lets an AI agent work inside Photoshop
+- [Photoshop MCP](${SITE_URL}/photoshop-mcp): an open-source MCP server for Photoshop on macOS; install from GitHub with Node.js
 - [Now](${SITE_URL}/now): what he is doing at the moment
 - [Work](${SITE_URL}/work), [Skills](${SITE_URL}/skills), [Certifications](${SITE_URL}/certifications), [FAQ](${SITE_URL}/faq)
 - [RSS feed](${SITE_URL}/feed.xml)

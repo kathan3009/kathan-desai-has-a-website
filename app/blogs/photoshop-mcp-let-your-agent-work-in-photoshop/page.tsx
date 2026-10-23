@@ -34,7 +34,7 @@ export default async function PhotoshopMcpPost() {
   return (
     <>
       <BreadcrumbListSchema items={[{ name: "Home", url: "/" }, { name: "Writing", url: "/blogs" }, { name: TITLE, url: `/blogs/${SLUG}` }]} />
-      <ArticleSchema headline={TITLE} description={EXCERPT} datePublished={published.iso} dateModified={published.iso} image={IMAGE} url={`${SITE_URL}/blogs/${SLUG}`} authorName="Kathan Desai" authorUrl={`${SITE_URL}/about`} />
+      <ArticleSchema headline={TITLE} description={EXCERPT} datePublished={published.iso} dateModified="2026-10-23T00:00:00.000Z" image={IMAGE} url={`${SITE_URL}/blogs/${SLUG}`} authorName="Kathan Desai" authorUrl={`${SITE_URL}/about`} />
       <ReaderShell>
         <article id="reading-article" tabIndex={-1} className={styles.article} aria-labelledby="article-title">
           <header className={styles.articleHeader}>
