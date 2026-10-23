@@ -1,5 +1,6 @@
 // A plain-text map of the site for language models, in the llms.txt convention:
 // who this is, what is here, and where each thing lives.
+import { publishedOptionalPages } from "@/lib/optional-pages";
 import { blogPresentation } from "@/lib/blog-presentation";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
@@ -14,14 +15,17 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const posts: string[] = STATIC_POSTS.map((post) => `- [${post.title}](${SITE_URL}/blogs/${post.slug}): ${blogPresentation(post).description}`);
   const projects: string[] = [];
+  let optionalLinks: string[] = [];
   try {
     const conn = await dbConnect();
     if (conn) {
       const staticSlugs = new Set(STATIC_POSTS.map((post) => post.slug));
-      const [dbPosts, dbProjects] = await Promise.all([
+      const [dbPosts, dbProjects, optionalPages] = await Promise.all([
         Blog.find({ isDraft: { $ne: true } }).select("title slug excerpt content seoDescription").sort({ publishedAt: -1 }).lean(),
         Project.find().sort({ order: 1 }).select("name description liveUrl repoUrl").lean(),
+        publishedOptionalPages(),
       ]);
+      optionalLinks = optionalPages.map(page => `- [${page.title}](${SITE_URL}${page.path})`);
       for (const post of dbPosts) if (!staticSlugs.has(String(post.slug))) posts.push(`- [${post.title}](${SITE_URL}/blogs/${encodeURIComponent(String(post.slug))}): ${blogPresentation({ slug: String(post.slug), title: String(post.title), excerpt: String(post.excerpt || ""), content: String(post.content || ""), seoDescription: String(post.seoDescription || "") }).description}`);
       for (const project of orderPublicProjects(dbProjects.map((p) => ({ name: String(p.name), id: String(p._id), description: String(p.description || ""), liveUrl: String(p.liveUrl || ""), repoUrl: String(p.repoUrl || "") })))) {
         const links = [project.liveUrl && `live: ${project.liveUrl}`, project.repoUrl && `source: ${project.repoUrl}`].filter(Boolean).join(", ");
@@ -46,7 +50,8 @@ Contact: ${AUTHOR.email}. Elsewhere: ${AUTHOR.sameAs.join(", ")}.
 - [Photography](${SITE_URL}/photography): photographs from the Himalaya and San Francisco
 - [Photoshop MCP](${SITE_URL}/photoshop-mcp): an open-source MCP server for Photoshop on macOS; install from GitHub with Node.js
 - [Now](${SITE_URL}/now): what he is doing at the moment
-- [Work](${SITE_URL}/work), [Skills](${SITE_URL}/skills), [Certifications](${SITE_URL}/certifications), [FAQ](${SITE_URL}/faq)
+- [Work](${SITE_URL}/work): experience and roles
+${optionalLinks.join("\n")}
 - [RSS feed](${SITE_URL}/feed.xml)
 
 ## Writing

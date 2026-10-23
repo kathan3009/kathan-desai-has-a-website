@@ -1,13 +1,11 @@
+import { pageMetadata } from "@/lib/page-metadata";
 import dbConnect from "@/lib/db";
 import Work from "@/models/Work";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Work",
-  description: "Kathan Desai's work experience and roles.",
-};
+export const metadata = pageMetadata({"title": "Work", "description": "Kathan Desai’s roles at BugBase, Pentest Copilot, and the ACM student chapter.", "path": "/work"});
 
 export default async function WorkPage() {
   const conn = await dbConnect();

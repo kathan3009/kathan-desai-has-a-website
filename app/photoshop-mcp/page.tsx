@@ -1,3 +1,4 @@
+import { FEED_ALTERNATE } from "@/lib/site";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
@@ -12,7 +13,7 @@ const POSTER = "/images/photoshop-mcp/poster.jpg";
 export const metadata: Metadata = {
   title: "Photoshop MCP",
   description: "Let Claude, Cursor or Codex work inside the Photoshop running on your Mac. An open-source MCP server: install from GitHub and connect your AI client.",
-  alternates: { canonical: "/photoshop-mcp" },
+  alternates: { canonical: "/photoshop-mcp", types: FEED_ALTERNATE },
   openGraph: { type: "website", title: "Photoshop MCP — let your AI agent work in Photoshop", description: "Open-source Photoshop tools for Claude Code, Claude Desktop, Cursor and Codex. Run locally on macOS with Node.js.", images: ["/images/photoshop-mcp/og.jpg"], url: "/photoshop-mcp" },
   twitter: { card: "summary_large_image", title: "Photoshop MCP", description: "Let your AI agent work in Photoshop. Open source, runs locally on macOS.", images: ["/images/photoshop-mcp/og.jpg"] },
 };

@@ -1,17 +1,16 @@
+import { pageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
-import type {Metadata} from "next";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
 import {extractYoutubeId} from "@/lib/youtube";
 import {BreadcrumbListSchema} from "@/components/schema/BreadcrumbList";
 import {MediaBlock} from "@/components/MediaBlock";
 import {postDate,readingMinutes} from "@/components/reading/post-utils";
-import {FEED_ALTERNATE} from "@/lib/site";
 import { STATIC_POSTS } from "@/lib/static-posts";
 import { mergeStaticPosts } from "@/lib/blog-catalog";
 import styles from "@/components/reading/reading.module.css";
 
-export const metadata:Metadata={title:"Writing",description:"Build notes and essays by Kathan Desai.",alternates:{canonical:"/blogs",types:FEED_ALTERNATE}};
+export const metadata = pageMetadata({"title": "Writing", "description": "Essays and build notes by Kathan Desai on AI agents, software engineering, penetration testing, and building products.", "path": "/blogs"});
 export const dynamic="force-dynamic";
 type Props={searchParams:Promise<{category?:string|string[]}>};
 type Post={readingMinutes?:number;_id:string;title:string;slug:string;excerpt:string;content:string;publishedAt:Date|string;category:string;featuredImage:string;videoEmbed:string;audioUrl:string;isTopStory:boolean;tags:string[]};

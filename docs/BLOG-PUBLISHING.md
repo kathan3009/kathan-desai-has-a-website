@@ -13,3 +13,11 @@ Publication dates stay original. Article schema, Open Graph, and sitemap use the
 Googlebot and answer crawlers can read the articles. Google-Extended is allowed for Gemini grounding; Google’s same switch also permits Gemini training. GPTBot and other listed training crawlers remain blocked. See https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers for Google’s controls.
 
 Run `npm test`, `npm run lint`, and `npm run build` before publishing template changes. After deploying, check the article’s canonical URL, description, BlogPosting dates, RSS discovery link, section links, related reading, and mobile layout. Search Console is still needed to assess actual indexing and search performance; these checks do not guarantee rankings or AI citations.
+
+## Other public pages
+
+Use `pageMetadata` from `lib/page-metadata.ts` for informational pages so their canonical, Open Graph, Twitter preview, and RSS discovery agree. Homepage metadata stays in the root layout; articles have their own article metadata.
+
+Skills, Certifications, and FAQ use the same saved content for rendering and their indexing decision. Empty collections are `noindex, follow` and omitted from the sitemap and llms.txt. Adding content in the admin restores indexing and discovery automatically. Their links have been removed from the global footer while those sections are empty; add footer links back when the sections warrant a permanent place in navigation.
+
+Search Console and field performance data are separate from these checks. A successful deployment confirms the site is ready to crawl; it does not confirm rankings, indexing, or AI citations.

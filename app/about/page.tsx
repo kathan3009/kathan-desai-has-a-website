@@ -1,11 +1,9 @@
+import { pageMetadata } from "@/lib/page-metadata";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
 
-export const metadata = {
-  title: "About",
-  description: "Kathan Desai founded BugBase and is building Pentest Copilot Enterprise in San Francisco.",
-};
+export const metadata = pageMetadata({"title": "About", "description": "Kathan Desai founded BugBase and is building Pentest Copilot Enterprise in San Francisco.", "path": "/about"});
 
 export default function AboutPage() {
   return (

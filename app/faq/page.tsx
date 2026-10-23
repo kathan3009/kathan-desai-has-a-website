@@ -1,3 +1,5 @@
+import { cache } from "react";
+import { pageMetadata } from "@/lib/page-metadata";
 import dbConnect from "@/lib/db";
 import FAQ from "@/models/FAQ";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
@@ -5,14 +7,18 @@ import { FAQPageSchema } from "@/components/schema/FAQPage";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "FAQ",
-  description: "Frequently asked questions about Kathan Desai and bugbase.",
-};
+const getItems = cache(async () => {
+  const conn = await dbConnect();
+  return conn ? await FAQ.find().sort({ order: 1 }) : [];
+});
+
+export async function generateMetadata() {
+  const items = await getItems();
+  return pageMetadata({ title: "FAQ", description: "Answers to common questions about Kathan Desai, BugBase, and his work.", path: "/faq", index: items.length > 0 });
+}
 
 export default async function FAQPage() {
-  const conn = await dbConnect();
-  const items = conn ? await FAQ.find().sort({ order: 1 }) : [];
+  const items = await getItems();
 
   const schemaItems = items.map((i) => ({ question: i.question, answer: i.answer }));
 

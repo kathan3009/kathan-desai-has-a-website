@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/page-metadata";
 import dbConnect from "@/lib/db";
 import Photo from "@/models/Photo";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
@@ -7,11 +8,7 @@ import styles from "@/components/photography/photography.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Photography",
-  description: "Photographs by Kathan Desai, taken on the road and away from work.",
-  alternates: { canonical: "/photography" },
-};
+export const metadata = pageMetadata({"title": "Photography", "description": "Photographs by Kathan Desai, taken on the road and away from work.", "path": "/photography"});
 
 export default async function PhotographyPage({ searchParams }: {
   searchParams: Promise<{ photo?: string | string[] }>;

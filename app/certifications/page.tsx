@@ -1,17 +1,23 @@
+import { cache } from "react";
+import { pageMetadata } from "@/lib/page-metadata";
 import dbConnect from "@/lib/db";
 import Certification from "@/models/Certification";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Certifications",
-  description: "Kathan Desai's certifications and credentials.",
-};
+const getItems = cache(async () => {
+  const conn = await dbConnect();
+  return conn ? await Certification.find().sort({ order: 1 }) : [];
+});
+
+export async function generateMetadata() {
+  const items = await getItems();
+  return pageMetadata({ title: "Certifications", description: "Kathan Desai’s certifications and credentials.", path: "/certifications", index: items.length > 0 });
+}
 
 export default async function CertificationsPage() {
-  const conn = await dbConnect();
-  const items = conn ? await Certification.find().sort({ order: 1 }) : [];
+  const items = await getItems();
 
   return (
     <>

@@ -1,3 +1,5 @@
+import { cache } from "react";
+import { pageMetadata } from "@/lib/page-metadata";
 import dbConnect from "@/lib/db";
 import Skill from "@/models/Skill";
 import { BreadcrumbListSchema } from "@/components/schema/BreadcrumbList";
@@ -5,14 +7,18 @@ import SkillsConstellation from "@/components/SkillsConstellation";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Skills",
-  description: "Kathan Desai's skills and technologies.",
-};
+const getItems = cache(async () => {
+  const conn = await dbConnect();
+  return conn ? await Skill.find().sort({ order: 1 }) : [];
+});
+
+export async function generateMetadata() {
+  const items = await getItems();
+  return pageMetadata({ title: "Skills", description: "The languages, tools, and technologies Kathan Desai works with.", path: "/skills", index: items.length > 0 });
+}
 
 export default async function SkillsPage() {
-  const conn = await dbConnect();
-  const items = conn ? await Skill.find().sort({ order: 1 }) : [];
+  const items = await getItems();
   const byCategory = items.reduce<Record<string, { name: string; icon?: string }[]>>((acc, s) => {
     const cat = s.category || "Other";
     if (!acc[cat]) acc[cat] = [];

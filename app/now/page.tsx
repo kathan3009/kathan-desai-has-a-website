@@ -1,9 +1,7 @@
+import { pageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Now",
-  description: "Kathan is in San Francisco, building Pentest Copilot Enterprise.",
-};
+export const metadata = pageMetadata({"title": "Now", "description": "Kathan is in San Francisco, building Pentest Copilot Enterprise.", "path": "/now"});
 
 export default function NowPage() {
   return (
